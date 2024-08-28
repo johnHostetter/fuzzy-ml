@@ -1,14 +1,18 @@
 rpy2==3.5.16  # to run R code from Python
 numpy==1.26.4  # new is 2.0.1 (update when possible - tests fail otherwise)
 pandas==1.5.3  # new is 2.2.2 (update when possible - tests fail otherwise)
+regime==0.0.4  # mine
 igraph==0.11.6
 scipy==1.13.1  # for sparse matrices
 sympy==1.13.2  # for torch
 graphviz==0.20.1
 torch==2.4.0
 torchquad==0.4.0
+torchvision==0.19.0  # for ECM datasets
 fuzzy-theory==0.0.3  # mine
 rough-theory==0.0.3  # mine
+scikit-learn==1.5.1  # for torchquad?
 matplotlib==3.9.1  # for torchquad
 SciencePlots==2.1.1  # for scientific publication plots
 natsort==8.4.0  # for natural sorting
+skorch==1.0.0
