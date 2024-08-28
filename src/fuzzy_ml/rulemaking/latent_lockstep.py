@@ -10,10 +10,10 @@ from skorch import NeuralNetRegressor
 from fuzzy.logic import Rule, LinguisticVariables
 from fuzzy.relations.continuous.t_norm import TNorm
 
-from crisp.autoencode import AutoEncoder
+from crisp_ml.autoencode import AutoEncoder
+from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.rulemaking.common import find_maximum_fuzzy_terms
 from fuzzy_ml.partitioning.clip import CategoricalLearningInducedPartitioning as CLIP
-from fuzzy_ml.datasets import LabeledDataset
 
 
 class LatentSpace(Node):

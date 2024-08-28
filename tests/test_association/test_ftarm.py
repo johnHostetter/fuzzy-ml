@@ -14,12 +14,12 @@ from fuzzy.sets.continuous.membership import Membership
 from fuzzy.sets.continuous.group import GroupedFuzzySets
 from fuzzy.logic import LinguisticVariables, KnowledgeBase
 
+from fuzzy_ml.utils import set_rng
 from fuzzy_ml.association.temporal import (
     TemporalInformationTable as TI,
     FuzzyTemporalAssocationRuleMining as FTARM,
     AssociationRule,
 )
-from soft_computing.utilities.reproducibility import set_rng
 from examples.ftarm import make_example
 
 

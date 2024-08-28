@@ -15,4 +15,5 @@ scikit-learn==1.5.1  # for torchquad?
 matplotlib==3.9.1  # for torchquad
 SciencePlots==2.1.1  # for scientific publication plots
 natsort==8.4.0  # for natural sorting
+pygad==3.3.1  # for genetic algorithms
 skorch==1.0.0

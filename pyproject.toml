@@ -24,6 +24,7 @@ Issues = "https://github.com/johnHostetter/fuzzy-ml/issues"
 [tool.hatch.build]
 include = [
     "src/fuzzy-ml/**",
+    "src/crisp-ml/**",
     "README.md",
     "LICENSE",
 ]
@@ -41,4 +42,4 @@ exclude = [
 ignore = ["*.git", "*.hg", ".git/**", ".hg/**"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/fuzzy-ml"]
+packages = ["src/fuzzy_ml", "src/crisp_ml"]

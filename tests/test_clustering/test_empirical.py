@@ -9,7 +9,7 @@ import unittest
 import torch
 import numpy as np
 
-from soft_computing.utilities.reproducibility import set_rng
+from fuzzy_ml.utils import set_rng
 from fuzzy_ml.clustering.empirical import (
     multimodal_density,
     find_local_maxima,

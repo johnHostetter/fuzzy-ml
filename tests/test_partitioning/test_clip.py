@@ -12,13 +12,13 @@ import numpy as np
 from fuzzy.logic import LinguisticVariables
 from fuzzy.sets.continuous.impl import Gaussian
 
+from fuzzy_ml.utils import set_rng
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.partitioning.clip import (
     regulator,
     find_indices_to_closest_neighbors,
     CategoricalLearningInducedPartitioning as CLIP,
 )
-from soft_computing.utilities.reproducibility import set_rng
 
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

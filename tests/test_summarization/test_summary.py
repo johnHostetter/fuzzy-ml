@@ -14,8 +14,8 @@ from fuzzy.relations.continuous.t_norm import Product, Minimum
 from fuzzy.relations.continuous.aggregation import OrderedWeightedAveraging as OWA
 from fuzzy.logic import Rule, LinguisticVariables, KnowledgeBase
 
+from fuzzy_ml.utils import set_rng
 from fuzzy_ml.summarization import Summary, Query, most_quantifier as Q
-from soft_computing.utilities.reproducibility import set_rng
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
