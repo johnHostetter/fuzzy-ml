@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fuzzy-ml"
+version = "0.0.1"
+authors = [
+  { name="John Wesley Hostetter", email="jhostetter16@gmail.com" },
+]
+description = "Leverage fuzzy theory for machine learning. Perform quantitative temporal transaction analysis, linguistic summarization of data, etc."
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/johnHostetter/fuzzy-ml"
+Issues = "https://github.com/johnHostetter/fuzzy-ml/issues"
+
+[tool.hatch.build]
+include = [
+    "src/fuzzy-ml/**",
+    "README.md",
+    "LICENSE",
+]
+exclude = [
+    "examples/**",
+    "tests/**",
+    "*.pyc",
+    "*.pyo",
+    ".git/**",
+    "build/**",
+    "dist/**",
+    ".venv/**",
+]
+# Ignore VCS
+ignore = ["*.git", "*.hg", ".git/**", ".hg/**"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fuzzy-ml"]
