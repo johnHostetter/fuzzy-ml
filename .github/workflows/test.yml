@@ -23,6 +23,16 @@ jobs:
     steps:
     - name: Checkout 📦
       uses: actions/checkout@v4
+    - name: Set up R 📊  # for rpy2 (which is used to access R libraries, such as frbs or RoughSets)
+      uses: r-lib/actions/setup-r@v2
+    - name: Set up Java  # for RKEEL, since KEEL is written in Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'oracle'
+        java-version: '17'  # tested on Java 17, but could maybe work on others
+    - name: Update Java References in R for rJava   # rJava is used by RKEEL
+      run: |
+        sudo R CMD javareconf
     - name: Set up Python ${{ matrix.python-version }} 🐍
       uses: actions/setup-python@v5
       with:
