@@ -14,7 +14,7 @@ from rpy2.robjects.packages import importr
 from rpy2.robjects import conversion, default_converter
 from fuzzy.relations.continuous.n_ary import NAryRelation
 from fuzzy.relations.continuous.t_norm import TNorm
-from fuzzy.logic import Rule
+from fuzzy.logic.rule import Rule
 
 from fuzzy_ml.rpy2.packages import install_r_packages
 

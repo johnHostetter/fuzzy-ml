@@ -7,8 +7,9 @@ from typing import Union, List
 
 import torch
 from regime import Node
-from fuzzy.logic import LinguisticVariables
+from fuzzy.logic.variables import LinguisticVariables
 from fuzzy.sets.continuous.abstract import ContinuousFuzzySet
+
 from fuzzy_ml.datasets import LabeledDataset
 
 

@@ -8,7 +8,8 @@ import torch
 import numpy as np
 import pandas as pd
 from fuzzy.sets.continuous.impl import Triangular
-from fuzzy.logic import LinguisticVariables, KnowledgeBase
+from fuzzy.logic.knowledge_base import KnowledgeBase
+from fuzzy.logic.variables import LinguisticVariables
 
 from fuzzy_ml.association.temporal import (
     FuzzyTemporalAssocationRuleMining as FTARM,
