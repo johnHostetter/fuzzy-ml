@@ -5,7 +5,7 @@ Implements the linguistic summary code and its necessary supporting functions.
 from collections import namedtuple
 
 import torch
-from fuzzy.logic import RuleBase
+from fuzzy.logic.rulebase import RuleBase
 from fuzzy.relations.continuous.t_norm import TNorm
 
 

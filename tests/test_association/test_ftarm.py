@@ -12,7 +12,8 @@ import pandas as pd
 from fuzzy.sets.continuous.impl import Gaussian
 from fuzzy.sets.continuous.membership import Membership
 from fuzzy.sets.continuous.group import GroupedFuzzySets
-from fuzzy.logic import LinguisticVariables, KnowledgeBase
+from fuzzy.logic.variables import LinguisticVariables
+from fuzzy.logic.knowledge_base import KnowledgeBase
 
 from fuzzy_ml.utils import set_rng
 from fuzzy_ml.association.temporal import (

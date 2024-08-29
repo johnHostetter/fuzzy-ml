@@ -13,9 +13,9 @@ import pandas as pd
 import igraph as ig
 from matplotlib import pyplot as plt
 from regime import hyperparameter, Node
+from fuzzy.logic.knowledge_base import KnowledgeBase
 from fuzzy.relations.continuous.t_norm import Minimum
 from fuzzy.sets.continuous.membership import Membership
-from fuzzy.logic import KnowledgeBase
 
 
 AssociationRule = collections.namedtuple(

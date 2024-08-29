@@ -8,8 +8,9 @@ from operator import itemgetter
 import torch
 import numpy as np
 from regime import Node
-from fuzzy.logic import Rule, LinguisticVariables
 from fuzzy.relations.continuous.t_norm import TNorm
+from fuzzy.logic.variables import LinguisticVariables
+from fuzzy.logic.rule import Rule
 
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.rulemaking.common import find_maximum_fuzzy_terms

@@ -12,7 +12,9 @@ from fuzzy.sets.continuous.impl import Gaussian
 from fuzzy.relations.continuous.n_ary import NAryRelation
 from fuzzy.relations.continuous.t_norm import Product, Minimum
 from fuzzy.relations.continuous.aggregation import OrderedWeightedAveraging as OWA
-from fuzzy.logic import Rule, LinguisticVariables, KnowledgeBase
+from fuzzy.logic.variables import LinguisticVariables
+from fuzzy.logic.knowledge_base import KnowledgeBase
+from fuzzy.logic.rule import Rule
 
 from fuzzy_ml.utils import set_rng
 from fuzzy_ml.summarization import Summary, Query, most_quantifier as Q
@@ -572,7 +574,7 @@ class TestSummary(unittest.TestCase):
                 input_data=dataset, antecedents=linguistic_terms
             ),
             sol_per_pop=10,
-            num_genes=summary.knowledge_base.var_dimensions(tags="premise"),
+            num_genes=summary.knowledge_base.shape.n_inputs,
             mutation_num_genes=1,
             gene_space=gene_space,
             on_start=check_initial_population,
@@ -637,7 +639,7 @@ class TestSummary(unittest.TestCase):
                 input_data=dataset, antecedents=linguistic_terms
             ),
             sol_per_pop=10,
-            num_genes=summary.knowledge_base.var_dimensions(tags="premise"),
+            num_genes=summary.knowledge_base.shape.n_inputs,
             mutation_num_genes=1,
             gene_space=gene_space,
             on_start=check_initial_population,
