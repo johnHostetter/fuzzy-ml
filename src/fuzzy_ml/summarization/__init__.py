@@ -51,9 +51,7 @@ class Summary:
         self.granulation = self.knowledge_base.select_by_tags(
             tags={"premise", "group"}
         )["item"][0]
-        self.engine: TNorm = RuleBase(
-            rules=self.knowledge_base.get_fuzzy_logic_rules(), device=self.device
-        ).premises
+        self.engine: TNorm = self.knowledge_base.rule_base.premises
         self.quantifier = (
             quantifier  # a fuzzy set describing a quantity in agreement (e.g., most)
         )

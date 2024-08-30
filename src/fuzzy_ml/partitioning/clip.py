@@ -9,11 +9,11 @@ import torch
 import numpy as np
 from regime import hyperparameter
 from fuzzy.sets.continuous.impl import Gaussian
-from fuzzy.sets.continuous.utils import find_widths, regulator
 from fuzzy.logic.variables import LinguisticVariables
 
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.partitioning import PartitioningMeta
+from .utils import find_widths, regulator
 
 
 class CategoricalLearningInducedPartitioning(PartitioningMeta):
