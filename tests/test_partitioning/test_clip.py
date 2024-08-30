@@ -9,7 +9,7 @@ import unittest
 
 import torch
 import numpy as np
-from fuzzy.sets.continuous.impl import Gaussian
+from fuzzy.sets import Gaussian
 from fuzzy.logic.variables import LinguisticVariables
 
 from fuzzy_ml.utils import set_rng

@@ -8,16 +8,17 @@ from typing import Tuple, List
 import torch
 import pygad
 import numpy as np
-from fuzzy.sets.continuous.impl import Gaussian
-from fuzzy.relations.continuous.n_ary import NAryRelation
-from fuzzy.relations.continuous.t_norm import Product, Minimum
-from fuzzy.relations.continuous.aggregation import OrderedWeightedAveraging as OWA
+from fuzzy.sets import Gaussian
+from fuzzy.relations.n_ary import NAryRelation
+from fuzzy.relations.t_norm import Product, Minimum
+from fuzzy.relations.aggregation import OrderedWeightedAveraging as OWA
 from fuzzy.logic.variables import LinguisticVariables
 from fuzzy.logic.knowledge_base import KnowledgeBase
 from fuzzy.logic.rule import Rule
 
 from fuzzy_ml.utils import set_rng
-from fuzzy_ml.summarization import Summary, Query, most_quantifier as Q
+from fuzzy_ml.summarization import Summary, Query
+from fuzzy_ml.summarization.quantifiers import most_quantifier as Q
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -126,7 +127,6 @@ def fitness_function_factory(
         candidate = Summary(
             knowledge_base,
             quantifier=Q,
-            truth=None,
             device=AVAILABLE_DEVICE,
         )
         query = Query(
@@ -165,7 +165,7 @@ def scenario_1() -> Tuple[torch.Tensor, Query, Summary]:
         linguistic_variables=LinguisticVariables(inputs=terms, targets=[]),
         rules=[rule],
     )
-    summary = Summary(knowledge_base, Q, None, device=AVAILABLE_DEVICE)
+    summary = Summary(knowledge_base, Q, device=AVAILABLE_DEVICE)
     # we want the second attribute to satisfy this
     query = Query(
         Gaussian(
@@ -202,7 +202,7 @@ def scenario_2() -> Tuple[torch.Tensor, Query, Summary, List[Gaussian]]:
         linguistic_variables=LinguisticVariables(inputs=terms, targets=[]),
         rules=[rule],  # the 'rule' encodes the linguistic summary
     )
-    summary = Summary(knowledge_base, Q, None, device=AVAILABLE_DEVICE)
+    summary = Summary(knowledge_base, Q, device=AVAILABLE_DEVICE)
     # we want the second attribute to satisfy this
     query = Query(
         Gaussian(
@@ -390,7 +390,7 @@ class TestSummary(unittest.TestCase):
             linguistic_variables=LinguisticVariables(inputs=terms, targets=[]),
             rules=[rule],  # the 'rule' encodes the linguistic summary
         )
-        summary = Summary(knowledge_base, Q, None, device=AVAILABLE_DEVICE)
+        summary = Summary(knowledge_base, Q, device=AVAILABLE_DEVICE)
 
         element = torch.tensor([[1.0, 0.5]], device=AVAILABLE_DEVICE)
         assert torch.isclose(
@@ -426,7 +426,7 @@ class TestSummary(unittest.TestCase):
             linguistic_variables=LinguisticVariables(inputs=terms, targets=[]),
             rules=[rule],  # the 'rule' encodes the linguistic summary
         )
-        summary = Summary(knowledge_base, Q, None, device=AVAILABLE_DEVICE)
+        summary = Summary(knowledge_base, Q, device=AVAILABLE_DEVICE)
 
         element = torch.tensor([[1.0, 0.5]], device=AVAILABLE_DEVICE)
         # we want to constrain that the second attribute has to satisfy the following
@@ -535,7 +535,7 @@ class TestSummary(unittest.TestCase):
             linguistic_variables=LinguisticVariables(inputs=terms, targets=[]),
             rules=[rule],  # the 'rule' encodes the linguistic summary
         )
-        summary = Summary(knowledge_base, Q, None, device=AVAILABLE_DEVICE)
+        summary = Summary(knowledge_base, Q, device=AVAILABLE_DEVICE)
         assert torch.isclose(
             summary.length(), torch.tensor(1 / 2, device=AVAILABLE_DEVICE)
         )

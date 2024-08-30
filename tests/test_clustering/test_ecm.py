@@ -8,7 +8,7 @@ import unittest
 
 import torch
 import numpy as np
-from fuzzy.sets.continuous.impl import Gaussian
+from fuzzy.sets import Gaussian
 
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.clustering.ecm import (

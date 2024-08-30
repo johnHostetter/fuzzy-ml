@@ -7,13 +7,12 @@ from typing import List
 
 import torch
 import numpy as np
-from fuzzy.sets.continuous.membership import Membership
-from fuzzy.sets.continuous.abstract import ContinuousFuzzySet
+from fuzzy.sets import FuzzySet, Membership
 
 
 def find_maximum_fuzzy_terms(
     data_observation: torch.Tensor,
-    antecedents: List[ContinuousFuzzySet],
+    antecedents: List[FuzzySet],
     offset: int = 0,
 ):
     """

@@ -6,8 +6,8 @@ import unittest
 
 import torch
 from fuzzy.logic.rule import Rule
-from fuzzy.relations.continuous.t_norm import Product
-from fuzzy.relations.continuous.n_ary import NAryRelation
+from fuzzy.relations.t_norm import Product
+from fuzzy.relations.n_ary import NAryRelation
 
 from fuzzy_ml.pruning.rpy2.rough_theory import (
     find_unique_premise_variables,

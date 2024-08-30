@@ -7,15 +7,15 @@ such that each fuzzy set has reasonable spread or coverage of the domain space.
 from typing import List
 
 import torch
-from regime import hyperparameter
+from fuzzy.sets import FuzzySet
 from fuzzy.logic.variables import LinguisticVariables
-from fuzzy.sets.continuous.abstract import ContinuousFuzzySet
+from regime import hyperparameter
 
 from fuzzy_ml.datasets import LabeledDataset
-from fuzzy_ml.partitioning import PartitioningMeta
+from fuzzy_ml.partitioning.meta import MetaPartitioner
 
 
-class EqualPartitioning(PartitioningMeta):
+class EqualPartitioning(MetaPartitioner):
     """
     The Equal Partitioning algorithm is a simple way to create linguistic variables.
     """
@@ -25,7 +25,7 @@ class EqualPartitioning(PartitioningMeta):
         self,
         train_dataset: LabeledDataset,
         device: torch.device,
-        set_type: ContinuousFuzzySet,
+        set_type: FuzzySet,
         n_splits: int,
     ) -> LinguisticVariables:
         """
@@ -48,16 +48,16 @@ class EqualPartitioning(PartitioningMeta):
     @hyperparameter("set_type", "n_splits")
     def algorithm(
         self,
-        tensor: torch.Tensor,
+        observations: torch.Tensor,
         device: torch.device,
-        set_type: ContinuousFuzzySet,
+        set_type: FuzzySet,
         n_splits: int,
-    ) -> List[ContinuousFuzzySet]:
+    ) -> List[FuzzySet]:
         """
         Expert partitioning, is an unsupervised algorithm that produces fuzzy sets.
 
         Args:
-            tensor: The selected tensor from the dataset.
+            observations: The selected observations from the dataset.
             device: The device to use.
             set_type: The type of fuzzy set to create.
             n_splits: The number of splits, or partitions, to make in each dimension.
@@ -65,7 +65,7 @@ class EqualPartitioning(PartitioningMeta):
         Returns:
             A list of fuzzy sets along the tensor space.
         """
-        std_dev = torch.std(tensor, dim=0)
+        std_dev = torch.std(observations, dim=0)
         for minimum, maximum in zip(self.minimums, self.maximums):
             centers = torch.linspace(minimum, maximum, steps=n_splits)
             widths = (

@@ -8,7 +8,7 @@ import torch
 from regime import Node
 from fuzzy.logic.rule import Rule
 from fuzzy.logic.variables import LinguisticVariables
-from fuzzy.relations.continuous.t_norm import TNorm
+from fuzzy.relations.t_norm import TNorm
 from skorch import NeuralNetRegressor
 
 from crisp_ml.autoencode import AutoEncoder
