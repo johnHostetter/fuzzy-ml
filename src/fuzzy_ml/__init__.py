@@ -16,7 +16,7 @@ class LabeledGaussian(Gaussian):
 
     def __init__(self, centers, widths, device: torch.device, labels):
         super().__init__(centers, widths, device)
-        self.supports: List[int] = [1] * self.shape[0]
+        self.supports: List[int] = [1] * centers.shape[0]
         self._labels: Union[None, List[torch.Tensor]] = (
             labels if labels is not None else None
         )

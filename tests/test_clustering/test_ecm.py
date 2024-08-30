@@ -101,26 +101,26 @@ class TestECM(unittest.TestCase):
         )
         self.assertTrue(
             np.allclose(
-                labeled_clusters.clusters.get_centers().cpu().detach().numpy(),
+                labeled_clusters.get_centers().cpu().detach().numpy(),
                 expected_clusters_centers,
             )
         )
         self.assertTrue(
             np.allclose(
-                labeled_clusters.clusters.get_widths().cpu().detach().numpy(),
+                labeled_clusters.get_widths().cpu().detach().numpy(),
                 expected_clusters_widths,
             )
         )
         # test that Gaussian was properly created
         self.assertTrue(
             torch.allclose(
-                labeled_clusters.clusters.get_centers(),
+                labeled_clusters.get_centers(),
                 expected_clusters.get_centers(),
             )
         )
         self.assertTrue(
             torch.allclose(
-                labeled_clusters.clusters.get_widths(),
+                labeled_clusters.get_widths(),
                 expected_clusters.get_widths(),
             )
         )

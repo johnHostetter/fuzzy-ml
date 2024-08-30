@@ -105,19 +105,14 @@ class EvolvingClusteringMethod(Node):
 
                 with torch.no_grad():
                     distances: torch.Tensor = general_euclidean_distance(
-                        labeled_clusters.fuzzy_set.get_centers(), observation
+                        labeled_clusters.get_centers(), observation
                     )
 
                     # returns a named tuple
                     min_and_argmin = torch.min(distances, dim=0)
-                    clusters_that_satisfy_input = (
-                        labeled_clusters.fuzzy_set.get_widths()[
-                            (
-                                min_and_argmin.values
-                                < labeled_clusters.fuzzy_set.get_widths()
-                            )
-                        ]
-                    )
+                    clusters_that_satisfy_input = labeled_clusters.get_widths()[
+                        (min_and_argmin.values < labeled_clusters.get_widths())
+                    ]
                     if clusters_that_satisfy_input.nelement() > 0:
                         # TLDR: find the index that satisfies it and increase its support
                         # Step 2: If there is any distance value, D_{ij} = ||x_{i} - Cc_{j}||,
@@ -132,7 +127,6 @@ class EvolvingClusteringMethod(Node):
                         # In this case, neither a new cluster is created, nor are any existing
                         # clusters updated (the cases of $x_4$ and $x_6$ in Fig. 2);
                         # the algorithm returns to Step 1. Else—go to the next step.
-
                         labeled_clusters.increment_support(
                             min_and_argmin.indices.item()
                         )
@@ -160,11 +154,6 @@ class EvolvingClusteringMethod(Node):
                             # position of the first example from the input stream as the
                             # first cluster center Cc_{1}^{0}, and setting a value 0 for its cluster
                             # radius Ru_{1} [Fig. 2(a)].
-                            labeled_clusters.extend(
-                                observation[None, :],
-                                torch.tensor([[0]], device=device),
-                                mode="vertical",
-                            )
                             labeled_clusters.add(
                                 centers=observation[None, :],
                                 widths=torch.tensor([[0]], device=device),
@@ -201,7 +190,7 @@ class EvolvingClusteringMethod(Node):
                                             labeled_clusters.supports[
                                                 nearest_cluster_idx
                                             ]
-                                            * labeled_clusters.clusters._centers[0][
+                                            * labeled_clusters._centers[0][
                                                 nearest_cluster_idx
                                             ]
                                             + observation
