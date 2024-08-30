@@ -218,7 +218,7 @@ class EvolvingClusteringMethod(Node):
 
     def get_labels(
         self, labeled_dataset: LabeledDataset, idx: int
-    ) -> Union[None, torch.Tensor]:
+    ) -> Union[None, List[torch.Tensor]]:
         """
         Get the label for the given index if the dataset is labeled.
 
@@ -229,7 +229,7 @@ class EvolvingClusteringMethod(Node):
         Returns:
             The label for the given index. If the dataset is not labeled, None is returned.
         """
-        labels = None
+        labels: Union[None, List[torch.Tensor]] = None
         if labeled_dataset.labels is not None:
-            labels = labeled_dataset.labels[idx]
+            labels: List[torch.Tensor] = [labeled_dataset.labels[idx]]
         return labels

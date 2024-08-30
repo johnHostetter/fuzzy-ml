@@ -25,9 +25,9 @@ def fetch_labeled_dataset(
     """
     if labeled_clusters.labels is None:
         return LabeledDataset(
-            data=labeled_clusters.clusters.get_centers(),
+            data=labeled_clusters.get_centers(),
             out_features=train_dataset.out_features,
         )
     return LabeledDataset(
-        data=labeled_clusters.clusters.get_centers(), labels=labeled_clusters.labels
+        data=labeled_clusters.get_centers(), labels=labeled_clusters.labels
     )
