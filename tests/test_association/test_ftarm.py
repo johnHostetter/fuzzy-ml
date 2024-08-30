@@ -9,11 +9,9 @@ from typing import Tuple, Dict, Any, List
 import torch
 import numpy as np
 import pandas as pd
-from fuzzy.sets.continuous.impl import Gaussian
-from fuzzy.sets.continuous.membership import Membership
-from fuzzy.sets.continuous.group import GroupedFuzzySets
 from fuzzy.logic.variables import LinguisticVariables
 from fuzzy.logic.knowledge_base import KnowledgeBase
+from fuzzy.sets import FuzzySetGroup, Gaussian, Membership
 
 from fuzzy_ml.utils import set_rng
 from fuzzy_ml.association.temporal import (
@@ -144,11 +142,11 @@ class TestFTARM(unittest.TestCase):
             None
         """
         dataframe, knowledge_base = make_example()
-        input_granulation: List[GroupedFuzzySets] = knowledge_base.select_by_tags(
+        input_granulation: List[FuzzySetGroup] = knowledge_base.select_by_tags(
             tags={"premise", "group"}
         )["item"]
         assert len(input_granulation) == 1  # there should only be 1 matching item
-        input_granulation: GroupedFuzzySets = input_granulation[0]
+        input_granulation: FuzzySetGroup = input_granulation[0]
         cols = sorted(set(dataframe.columns) - {"date"})
         actual_memberships: Membership = input_granulation(
             torch.tensor(

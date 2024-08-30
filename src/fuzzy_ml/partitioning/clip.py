@@ -7,16 +7,16 @@ from typing import List
 
 import torch
 import numpy as np
-from regime import hyperparameter
-from fuzzy.sets.continuous.impl import Gaussian
-from fuzzy.sets.continuous.utils import find_widths, regulator
+from fuzzy.sets import Gaussian, FuzzySet
 from fuzzy.logic.variables import LinguisticVariables
+from regime import hyperparameter
 
 from fuzzy_ml.datasets import LabeledDataset
-from fuzzy_ml.partitioning import PartitioningMeta
+from fuzzy_ml.partitioning.meta import MetaPartitioner
+from .utils import find_widths, regulator
 
 
-class CategoricalLearningInducedPartitioning(PartitioningMeta):
+class CategoricalLearningInducedPartitioning(MetaPartitioner):
     """
     Categorical Learning Induced Partitioning (CLIP), is an unsupervised learning
     algorithm that produces and incrementally adjusts Gaussian fuzzy sets.
@@ -56,7 +56,7 @@ class CategoricalLearningInducedPartitioning(PartitioningMeta):
         device: torch.device,
         epsilon: float,
         adjustment: float,
-    ) -> List[Gaussian]:
+    ) -> List[FuzzySet]:
         """
         The inner call of the CLIP algorithm. This is where the actual work is done.
 
@@ -83,14 +83,9 @@ class CategoricalLearningInducedPartitioning(PartitioningMeta):
             else:
                 # calculate the similarity between the input and existing fuzzy clusters
                 for dim, _ in enumerate(observation):
-                    try:
-                        membership_degrees: torch.Tensor = self.terms[dim](
-                            observation[dim]
-                        ).degrees
-                    except RuntimeError:
-                        print("RuntimeError: ", observation[dim])
-                    except IndexError:
-                        print("IndexError: ", observation[dim])
+                    membership_degrees: torch.Tensor = self.terms[dim](
+                        observation[dim]
+                    ).degrees
                     if membership_degrees.is_sparse:
                         membership_degrees = membership_degrees.to_dense()
 
@@ -184,20 +179,17 @@ class CategoricalLearningInducedPartitioning(PartitioningMeta):
         gc.collect()
         return self.terms
 
-    def make_first_fuzzy_sets(self, data_point, alpha, device: torch.device):
+    def make_first_fuzzy_sets(
+        self, data_point: np.ndarray, alpha: float, device: torch.device
+    ):
         """
         The first encountered observation is used to initialize a fuzzy set
         within each input dimension.
 
         Args:
-            data_point (1D Numpy array): A single input_data observation where
+            data_point: A single input_data observation where
                 each column is a feature/attribute.
-            minimums (iterable): The minimum value per feature in X.
-            maximums (iterable): The maximum value per feature in X.
-            terms (list): A list of terms that have already been created that CLIP
-                should consider when producing more terms. Default is None, which means
-                no existing terms will be passed to CLIP.
-            alpha (float): A hyperparameter to adjust the generated widths' coverage.
+            alpha: A hyperparameter to adjust the generated widths' coverage.
             device: The device to use.
 
         Returns:

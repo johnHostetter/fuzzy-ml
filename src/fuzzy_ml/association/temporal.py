@@ -11,11 +11,11 @@ import torch
 import numpy as np
 import pandas as pd
 import igraph as ig
-from matplotlib import pyplot as plt
-from regime import hyperparameter, Node
+from fuzzy.sets import Membership
 from fuzzy.logic.knowledge_base import KnowledgeBase
-from fuzzy.relations.continuous.t_norm import Minimum
-from fuzzy.sets.continuous.membership import Membership
+from fuzzy.relations.t_norm import Minimum
+from regime import hyperparameter, Node
+from matplotlib import pyplot as plt
 
 
 AssociationRule = collections.namedtuple(

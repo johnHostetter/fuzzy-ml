@@ -10,20 +10,20 @@ class AutoEncoder(torch.nn.Module):
     A default auto-encoder; used for the latent-lockstep method.
     """
 
-    def __init__(self, in_features, latent_space_dim, device: torch.device):
+    def __init__(self, n_inputs: int, n_latent: int, device: torch.device):
         super().__init__()
 
-        hidden_layer_size = int(in_features / 2)
+        n_hidden: int = int(n_inputs / 2)
         self.encoder: torch.nn.Sequential = torch.nn.Sequential(
-            torch.nn.Linear(in_features, hidden_layer_size, device=device),
+            torch.nn.Linear(n_inputs, n_hidden, device=device),
             torch.nn.Tanh(),
-            torch.nn.Linear(hidden_layer_size, latent_space_dim, device=device),
+            torch.nn.Linear(n_hidden, n_latent, device=device),
             torch.nn.Tanh(),
         )
         self.decoder: torch.nn.Sequential = torch.nn.Sequential(
-            torch.nn.Linear(latent_space_dim, hidden_layer_size, device=device),
+            torch.nn.Linear(n_latent, n_hidden, device=device),
             torch.nn.Tanh(),
-            torch.nn.Linear(hidden_layer_size, in_features, device=device),
+            torch.nn.Linear(n_hidden, n_inputs, device=device),
             torch.nn.Tanh(),
         )
 

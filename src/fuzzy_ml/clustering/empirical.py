@@ -6,7 +6,7 @@ from collections import namedtuple
 
 import torch
 import numpy as np
-from fuzzy.sets.continuous.impl import Gaussian as Cluster
+from fuzzy.sets import Gaussian as Cluster
 
 MultimodalDensity = namedtuple(
     "MultimodalDensity", "uniques frequencies distances densities"

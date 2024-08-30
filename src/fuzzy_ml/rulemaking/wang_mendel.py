@@ -8,7 +8,7 @@ from operator import itemgetter
 import torch
 import numpy as np
 from regime import Node
-from fuzzy.relations.continuous.t_norm import TNorm
+from fuzzy.relations.t_norm import TNorm
 from fuzzy.logic.variables import LinguisticVariables
 from fuzzy.logic.rule import Rule
 
