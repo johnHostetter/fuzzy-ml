@@ -22,6 +22,7 @@ AVAILABLE_DEVICE: torch.device = torch.device(
 
 
 def make_example():
+    # TODO: remove duplicate - this is in the tests as well
     """
     Make a toy example that is used in the original Fuzzy Temporal Association Rule Mining paper.
 
