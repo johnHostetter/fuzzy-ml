@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fuzzy-ml"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name="John Wesley Hostetter", email="jhostetter16@gmail.com" },
 ]
@@ -23,8 +23,8 @@ Issues = "https://github.com/johnHostetter/fuzzy-ml/issues"
 
 [tool.hatch.build]
 include = [
-    "src/fuzzy-ml/**",
-    "src/crisp-ml/**",
+    "src/fuzzy_ml/**",
+    "src/crisp_ml/**",
     "README.md",
     "LICENSE",
 ]
