@@ -3,6 +3,7 @@ Test the Fuzzy Temporal Association Rule Mining algorithm
 and its necessary helper functions.
 """
 
+import datetime
 import unittest
 from typing import Tuple, Dict, Any, List
 
@@ -11,7 +12,7 @@ import numpy as np
 import pandas as pd
 from fuzzy.logic.variables import LinguisticVariables
 from fuzzy.logic.knowledge_base import KnowledgeBase
-from fuzzy.sets import FuzzySetGroup, Gaussian, Membership
+from fuzzy.sets import FuzzySetGroup, Triangular, Gaussian, Membership
 
 from fuzzy_ml.utils import set_rng
 from fuzzy_ml.association.temporal import (
@@ -19,11 +20,72 @@ from fuzzy_ml.association.temporal import (
     FuzzyTemporalAssocationRuleMining as FTARM,
     AssociationRule,
 )
-from examples.ftarm import make_example
 
 
 set_rng(5)
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def make_example():
+    """
+    Make a toy example that is used in the original Fuzzy Temporal Association Rule Mining paper.
+
+    Returns:
+        pd.DataFrame, soft.computing.knowledge.KnowledgeBase
+    """
+    aug_5 = datetime.date(year=2011, month=8, day=5)
+    aug_6 = datetime.date(year=2011, month=8, day=6)
+    dates = [aug_5, aug_5, aug_5, aug_6, aug_6]
+    example_dataframe = pd.DataFrame(
+        {
+            "date": dates,
+            "A": [5, 2.5, 0, 2.5, 2.5],
+            "B": [0, 2, 0, 2, 5],
+            "C": [4, 0, 4, 0, 0],
+            "D": [0, 0, 0, 4, 4],
+            "E": [0, 0, 0, 0, 2],
+        }
+    )
+
+    variables = {
+        "A": Triangular(
+            centers=np.array([5, 10]),
+            widths=np.array([5] * 2),
+            # labels=["low", "high"],
+            device=AVAILABLE_DEVICE,
+        ),
+        "B": Triangular(
+            centers=np.array([4, 8]),
+            widths=np.array([4] * 2),
+            # labels=["low", "high"],
+            device=AVAILABLE_DEVICE,
+        ),
+        "C": Triangular(
+            centers=np.array([3, 6]),
+            widths=np.array([3] * 2),
+            # labels=["low", "high"],
+            device=AVAILABLE_DEVICE,
+        ),
+        "D": Triangular(
+            centers=np.array([2, 4]),
+            widths=np.array([2] * 2),
+            # labels=["low", "high"],
+            device=AVAILABLE_DEVICE,
+        ),
+        "E": Triangular(
+            centers=np.array([2, 4]),
+            widths=np.array([2] * 2),
+            # labels=["low", "high"],
+            device=AVAILABLE_DEVICE,
+        ),
+    }
+
+    return example_dataframe, KnowledgeBase.create(
+        linguistic_variables=LinguisticVariables(
+            inputs=list(variables.values()), targets=[]
+        ),
+        rules=[],
+    )
 
 
 def big_data_example(seed: int) -> Tuple[pd.DataFrame, KnowledgeBase]:

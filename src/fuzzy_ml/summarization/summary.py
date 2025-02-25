@@ -251,9 +251,7 @@ class Summary:
             A ratio between 0 and 1 that describes how short a summary is, where 1 means
             extremely short and 0 means extremely long.
         """
-        summarizer_cardinality: int = torch.count_nonzero(
-            self.engine.applied_mask
-        ).item()
+        summarizer_cardinality: int = torch.count_nonzero(self.engine.get_mask()).item()
         return 2 * (
             torch.pow(torch.tensor(0.5, device=self.device), summarizer_cardinality)
         )
