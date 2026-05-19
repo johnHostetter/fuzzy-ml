@@ -11,11 +11,11 @@ The following may be necessary on Windows to set the 'R_HOME' for rpy2 correctly
 
 import unittest
 
+import rpy2.robjects.packages as rpackages
 from pandas import DataFrame
 from rpy2 import robjects
 from rpy2.robjects import pandas2ri
-import rpy2.robjects.packages as rpackages
-from rpy2.robjects.packages import importr, data
+from rpy2.robjects.packages import data, importr
 
 
 class TestRoughSets(unittest.TestCase):
@@ -80,12 +80,14 @@ class TestRoughSets(unittest.TestCase):
             rs_hiring_data, indiscernibility_relation
         )
         print(f"Possible approximations for the rough set: {list(roughset.names)}")
-        # the zero index refers to the first option, which is the lower approximation
+        # the zero index refers to the first option, which is the lower
+        # approximation
         print(
             f"Possible outcomes for the lower approximation: {list(roughset[0].names)}"
         )
         # the indexing of [0][0] refers to the first option, which is Accept
-        # and the indexing of [0][1] refers to the second option, which is Reject
+        # and the indexing of [0][1] refers to the second option, which is
+        # Reject
         self.assertTrue(list(roughset[0][0]), [2, 3, 4])  # Accept
         self.assertTrue(list(roughset[0][1]), [2, 3, 4])  # Reject
 

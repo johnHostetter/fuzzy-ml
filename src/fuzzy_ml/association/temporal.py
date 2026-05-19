@@ -3,20 +3,20 @@ Implements the Fuzzy Temporal Association Rule Mining algorithm
 and its necessary helper functions.
 """
 
-import itertools
 import collections
-from typing import Tuple, Union, List
+import itertools
+from typing import List, Tuple, Union
 
-import torch
+import igraph as ig
 import numpy as np
 import pandas as pd
-import igraph as ig
-from fuzzy.sets import Membership
+import torch
 from fuzzy.logic.knowledge_base import KnowledgeBase
 from fuzzy.relations.t_norm import Minimum
-from regime import hyperparameter, Node
+from fuzzy.sets import Membership
 from matplotlib import pyplot as plt
 
+from regime import Node, hyperparameter
 
 AssociationRule = collections.namedtuple(
     "AssociationRule", ["antecedents", "consequents", "confidence"]
@@ -32,9 +32,10 @@ class TemporalInformationTable:
     def __init__(self, dataframe, variables):
         self.dataframe, self.variables = dataframe, variables
 
-        # find the earliest starting period for each temporal item in the dataframe
+        # find the earliest starting period for each temporal item in the
+        # dataframe
         self.first_transaction_indices = (
-            self.dataframe[self.variables].values != 0
+            self.dataframe[self.variables].options != 0
         ).argmax(axis=0)
         self.size_of_transactions_per_time_granule = self.dataframe.groupby(
             "date"
@@ -101,10 +102,11 @@ class TemporalInformationTable:
             tuple(pair[0] for pair in candidate) for candidate in candidates
         ]
         starting_periods_per_item_in_each_candidate = [
-            [self.starting_periods.values[0, var_idx] for var_idx in candidate_indices]
+            [self.starting_periods.options[0, var_idx] for var_idx in candidate_indices]
             for candidate_indices in item_indices_in_each_candidate
         ]
-        # get the maximum starting period within each candidate to calculate fuzzy temporal support
+        # get the maximum starting period within each candidate to calculate
+        # fuzzy temporal support
         return np.array(starting_periods_per_item_in_each_candidate).max(axis=1)
 
 
@@ -197,19 +199,21 @@ class FuzzyTemporalAssocationRuleMining(
         dataframe = self.ti_table.relevant_transactions(starting_period=starting_period)
 
         if candidates is None:
-            # step 1: simply calculate the membership of each fuzzy set individually
+            # step 1: simply calculate the membership of each fuzzy set
+            # individually
             membership: Membership = self.granulation(
                 torch.tensor(
-                    dataframe[self.variables].values, device=self.device
+                    dataframe[self.variables].options, device=self.device
                 ).float()
             )
             return membership.degrees * membership.mask
-        # step 8.1: membership of some specific combination of fuzzy sets, resolved by a t-norm
+        # step 8.1: membership of some specific combination of fuzzy sets,
+        # resolved by a t-norm
         engine = Minimum(
             *[list(candidate) for candidate in candidates], device=self.device
         )
         antecedents_memberships = self.granulation(
-            torch.tensor(dataframe[self.variables].values, device=self.device).float()
+            torch.tensor(dataframe[self.variables].options, device=self.device).float()
         )
         return engine(antecedents_memberships).degrees
 
@@ -249,14 +253,14 @@ class FuzzyTemporalAssocationRuleMining(
         if candidates is None:  # 1-itemsets
             # step 3
             if starting_period is None:
-                starting_periods = self.ti_table.starting_periods.values[0]
+                starting_periods = self.ti_table.starting_periods.options[0]
             else:
                 number_of_temporal_items = self.ti_table.starting_periods.shape[1]
                 starting_periods = np.array(
                     [starting_period] * number_of_temporal_items
                 )
             num_of_possible_transactions_per_temporal_item = [
-                self.ti_table.size_of_transactions_per_time_granule.values[idx:].sum()
+                self.ti_table.size_of_transactions_per_time_granule.options[idx:].sum()
                 for idx in starting_periods
             ]
             denominator = torch.tensor(
@@ -265,15 +269,17 @@ class FuzzyTemporalAssocationRuleMining(
         else:  # r-itemsets
             # step 8.3
             if starting_period is None:
-                # max starting period within each candidate to calculate fuzzy temporal support
+                # max starting period within each candidate to calculate fuzzy
+                # temporal support
                 max_starting_periods = self.ti_table.max_starting_periods(candidates)
             else:
-                # given a max starting period to look on from; used by association rule mining
+                # given a max starting period to look on from; used by
+                # association rule mining
                 max_starting_periods = np.array(
                     [starting_period] * len(candidates)
                 ).flatten()
             num_of_transactions_per_candidate = [
-                self.ti_table.size_of_transactions_per_time_granule.values[idx:].sum()
+                self.ti_table.size_of_transactions_per_time_granule.options[idx:].sum()
                 for idx in max_starting_periods
             ]
             num_of_transactions_per_candidate = np.array(
@@ -301,7 +307,8 @@ class FuzzyTemporalAssocationRuleMining(
         row_col_indices_to_keep: Tuple[torch.Tensor, torch.Tensor] = torch.where(
             supports > torch.tensor(self.min_support, device=self.device)
         )
-        # inner_supports is a torch.Tensor that has shape (num of temporal items, num of terms)
+        # inner_supports is a torch.Tensor that has shape (num of temporal
+        # items, num of terms)
         supports = supports[row_col_indices_to_keep]
         items = list(
             zip(
@@ -383,7 +390,8 @@ class FuzzyTemporalAssocationRuleMining(
             required_subsets = {
                 frozenset(items) for items in itertools.combinations(candidate, 2)
             }
-            # the generated candidate must be size (r + 1) and satisfy apriori principle
+            # the generated candidate must be size (r + 1) and satisfy apriori
+            # principle
             if len(candidate) == max_len_of_itemsets + 1 and len(
                 required_subsets.intersection(available_subsets)
             ) == len(required_subsets):
@@ -402,7 +410,8 @@ class FuzzyTemporalAssocationRuleMining(
                     if set(possible_subset_vertex["item"]).issubset(candidate):
                         edges_to_add.add((possible_subset_vertex, target_vertex))
 
-                # add the edges between the frequent items and the new candidates
+                # add the edges between the frequent items and the new
+                # candidates
                 self.knowledge_base.graph.add_edges(
                     edges_to_add, attributes={"lattice": True}
                 )

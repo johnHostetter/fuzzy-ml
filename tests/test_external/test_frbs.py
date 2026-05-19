@@ -11,8 +11,8 @@ The following may be necessary on Windows to set the 'R_HOME' for rpy2 correctly
 
 import unittest
 
-from rpy2 import robjects
 import rpy2.robjects.packages as rpackages
+from rpy2 import robjects
 from rpy2.robjects.packages import importr
 
 
@@ -199,7 +199,8 @@ class TestRoughSets(unittest.TestCase):
             }
         )
 
-        # learn the FRBS model using the 'frbs_learn' function in R and the Wang-Mendel method
+        # learn the FRBS model using the 'frbs_learn' function in R and the
+        # Wang-Mendel method
         wang_mendel_object = self.frbs_package.frbs_learn(
             train_data_matrix, range_data, method_type, wang_mendel_control
         )

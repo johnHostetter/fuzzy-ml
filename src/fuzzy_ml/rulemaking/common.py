@@ -5,8 +5,8 @@ fuzzy logic rule generation procedures, such as the namedtuple "Rule".
 
 from typing import List
 
-import torch
 import numpy as np
+import torch
 from fuzzy.sets import FuzzySet, Membership
 
 

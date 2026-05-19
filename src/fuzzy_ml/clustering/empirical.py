@@ -4,8 +4,8 @@ Implements the empirical fuzzy sets algorithm.
 
 from collections import namedtuple
 
-import torch
 import numpy as np
+import torch
 from fuzzy.sets import Gaussian as Cluster
 
 MultimodalDensity = namedtuple(
@@ -81,7 +81,8 @@ def find_local_maxima(results: namedtuple):
     index = results.densities.max(
         dim=0
     ).indices.item()  # the index to the largest multimodal density
-    visited_indices.append(index)  # keep track that the above index is/has been used
+    # keep track that the above index is/has been used
+    visited_indices.append(index)
     cluster.add(
         results.uniques[index]
     )  # add the observation to the cluster that is being developed
@@ -94,7 +95,8 @@ def find_local_maxima(results: namedtuple):
         temp = results.distances[index]
         # ignore observations' distances already used
         temp[torch.LongTensor(visited_indices)] = float("inf")
-        # get the observation index with the minimum distance to the current observation
+        # get the observation index with the minimum distance to the current
+        # observation
         _, index = temp.min(dim=0)
         # keep track of the above index (order matters)
         visited_indices.append(index.item())
@@ -208,7 +210,8 @@ def find_data_clouds(
             cloud_distances[cloud_index] < distance_threshold
         ]
         if cloud_results.densities[cloud_index] == nearby_partitions.max():
-            # if this current cloud (cloud_index) has the largest density, keep it, else toss it
+            # if this current cloud (cloud_index) has the largest density, keep
+            # it, else toss it
             next_cloud_centers.append(cloud_centers[cloud_index].cpu().detach().numpy())
             next_cloud_widths.append(cloud_widths[cloud_index].cpu().detach().numpy())
     prototypes = torch.tensor(np.array(next_cloud_centers), device=prototypes.device)

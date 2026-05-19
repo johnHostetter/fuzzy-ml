@@ -3,22 +3,21 @@ Test the linguistic summary code implementation.
 """
 
 import unittest
-from typing import Tuple, List
+from typing import List, Tuple
 
-import torch
-import pygad
 import numpy as np
-from fuzzy.sets import Gaussian
-from fuzzy.relations.n_ary import NAryRelation
-from fuzzy.relations.t_norm import Product, Minimum
-from fuzzy.relations.aggregation import OrderedWeightedAveraging as OWA
-from fuzzy.logic.variables import LinguisticVariables
+import pygad
+import torch
 from fuzzy.logic.knowledge_base import KnowledgeBase
 from fuzzy.logic.rule import Rule
-
-from fuzzy_ml.utils import set_rng
-from fuzzy_ml.summarization import Summary, Query
+from fuzzy.logic.variables import LinguisticVariables
+from fuzzy.relations.aggregation import OrderedWeightedAveraging as OWA
+from fuzzy.relations.n_ary import NAryRelation
+from fuzzy.relations.t_norm import Minimum, Product
+from fuzzy.sets import Gaussian
+from fuzzy_ml.summarization import Query, Summary
 from fuzzy_ml.summarization.quantifiers import most_quantifier as Q
+from fuzzy_ml.utils import set_rng
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -429,7 +428,8 @@ class TestSummary(unittest.TestCase):
         summary = Summary(knowledge_base, Q, device=AVAILABLE_DEVICE)
 
         element = torch.tensor([[1.0, 0.5]], device=AVAILABLE_DEVICE)
-        # we want to constrain that the second attribute has to satisfy the following
+        # we want to constrain that the second attribute has to satisfy the
+        # following
         query = Query(
             Gaussian(
                 centers=np.array([0.3]), widths=np.array([0.3]), device=AVAILABLE_DEVICE

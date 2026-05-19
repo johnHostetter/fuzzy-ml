@@ -4,17 +4,13 @@ Demo of working with the Fuzzy Temporal Association Rule Mining algorithm.
 
 import datetime
 
-import torch
 import numpy as np
 import pandas as pd
-from fuzzy.sets import Triangular
+import torch
 from fuzzy.logic.knowledge_base import KnowledgeBase
 from fuzzy.logic.variables import LinguisticVariables
-
-from fuzzy_ml.association.temporal import (
-    FuzzyTemporalAssocationRuleMining as FTARM,
-)
-
+from fuzzy.sets import Triangular
+from fuzzy_ml.association.temporal import FuzzyTemporalAssocationRuleMining as FTARM
 
 AVAILABLE_DEVICE: torch.device = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"

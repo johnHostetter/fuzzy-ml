@@ -5,16 +5,16 @@ Functions related to the fuzzy logic rule creation process outlined as the Laten
 from typing import List, Type
 
 import torch
-from regime import Node
+from crisp_ml.autoencode import AutoEncoder
 from fuzzy.logic.rule import Rule
 from fuzzy.logic.variables import LinguisticVariables
 from fuzzy.relations.t_norm import TNorm
+from fuzzy_ml.datasets import LabeledDataset
+from fuzzy_ml.partitioning.clip import CategoricalLearningInducedPartitioning as CLIP
+from fuzzy_ml.rulemaking.common import find_maximum_fuzzy_terms
 from skorch import NeuralNetRegressor
 
-from crisp_ml.autoencode import AutoEncoder
-from fuzzy_ml.datasets import LabeledDataset
-from fuzzy_ml.rulemaking.common import find_maximum_fuzzy_terms
-from fuzzy_ml.partitioning.clip import CategoricalLearningInducedPartitioning as CLIP
+from regime import Node
 
 
 class LatentSpace(Node):
@@ -35,7 +35,8 @@ class LatentSpace(Node):
         epsilon: float,
         adjustment: float,
     ) -> LinguisticVariables:
-        # epsilon & adjustment are hyperparameters that are passed to the CLIP algorithm
+        # epsilon & adjustment are hyperparameters that are passed to the CLIP
+        # algorithm
         """
         The Latent-Lockstep Method for High-Dimensional Fuzzy Logic Rule Generation
         (by John Wesley Hostetter).

@@ -42,7 +42,8 @@ class TestDChaos(unittest.TestCase):
         """
         time_series_data = self.chaos_package.logistic_sim(a=4, n=1000)
         help(self.chaos_package.embedding)
-        # in the following, m=5 is the embedding dimension and lag=2 is the time lag
+        # in the following, m=5 is the embedding dimension and lag=2 is the
+        # time lag
         data = self.chaos_package.embedding(
             time_series_data, m=5, lag=2, timelapse="FIXED"
         )

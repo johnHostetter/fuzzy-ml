@@ -3,20 +3,19 @@ This Python script will be used to implement fuzzy logic rule reduction algorith
 """
 
 import os
-from typing import List, Type, Iterable, Union, Tuple
+from typing import Iterable, List, Tuple, Type, Union
 
-import rpy2
-import torch
 import numpy as np
 import pandas as pd
-from rpy2 import robjects
-from rpy2.robjects.packages import importr
-from rpy2.robjects import conversion, default_converter
+import rpy2
+import torch
+from fuzzy.logic.rule import Rule
 from fuzzy.relations.n_ary import NAryRelation
 from fuzzy.relations.t_norm import TNorm
-from fuzzy.logic.rule import Rule
-
 from fuzzy_ml.rpy2.packages import install_r_packages
+from rpy2 import robjects
+from rpy2.robjects import conversion, default_converter
+from rpy2.robjects.packages import importr
 
 
 def reduce_fuzzy_logic_rules_with_rough_sets(
@@ -67,7 +66,8 @@ def reduce_fuzzy_logic_rules_with_rough_sets(
             print("Diversity of output values: ", counts)
 
         if counts[0] == len(rules):  # all rules have the same output value
-            return rules, torch.Tensor(output_values)  # no need to reduce the rules
+            # no need to reduce the rules
+            return rules, torch.Tensor(output_values)
 
         # make a DataFrame from the numpy matrix
         rules_df = pd.DataFrame(
@@ -152,7 +152,8 @@ def make_rule_matrix(
     numpy_matrix[:, :] = -1
     for idx, rule in enumerate(rules):
         # add the rule's premise and consequence to the matrix
-        # assuming the first variable is the output variable - ignoring MIMO systems
+        # assuming the first variable is the output variable - ignoring MIMO
+        # systems
         numpy_matrix[idx, -1] = rule.consequence.indices[0][0][-1]
         for variable_idx, variable_value in rule.premise.indices[0]:
             numpy_matrix[idx, variable_idx] = variable_value
@@ -200,7 +201,8 @@ def parse_reduced_rules(
         premise = frozenset(
             zip(
                 map(
-                    lambda x: int(x) - 1,  # the R language counts from 1, Python from 0
+                    lambda x: int(x) - 1,
+                    # the R language counts from 1, Python from 0
                     reduced_rule.rx("idx")[0],
                 ),  # get the indices of the variables
                 map(
@@ -208,7 +210,7 @@ def parse_reduced_rules(
                 ),  # list of strings to list of ints
             )  # map the (linguistic) variable indices to the (linguistic term) values
         )
-        if output_values is None:
+        if True or output_values is None:
             # the following is for Mamdani fuzzy logic controllers
             consequence = frozenset(
                 zip(  # the consequent will only have one variable
@@ -220,6 +222,7 @@ def parse_reduced_rules(
                     ),  # list of strings to list of ints
                 )  # map the (linguistic) variable indices to the (linguistic term) values
             )
+            consequence = NAryRelation(*consequence, device=device)
         else:
             consequence = NAryRelation((len(final_rules), 0), device=device)
         laplace = float(reduced_rule.rx("laplace")[0][0])

@@ -3,14 +3,14 @@ Contains granulation or partition algorithms that use fuzzy theory (could be onl
 """
 
 from abc import abstractmethod
-from typing import Union, List
+from typing import List, Union
 
 import torch
-from regime import Node
-from fuzzy.sets import FuzzySet
 from fuzzy.logic.variables import LinguisticVariables
-
+from fuzzy.sets import FuzzySet
 from fuzzy_ml.datasets import LabeledDataset
+
+from regime import Node
 
 
 class MetaPartitioner(Node):

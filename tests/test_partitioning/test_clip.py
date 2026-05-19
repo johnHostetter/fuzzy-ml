@@ -7,19 +7,14 @@ import os
 import pathlib
 import unittest
 
-import torch
 import numpy as np
-from fuzzy.sets import Gaussian
+import torch
 from fuzzy.logic.variables import LinguisticVariables
-
-from fuzzy_ml.utils import set_rng
+from fuzzy.sets import Gaussian
 from fuzzy_ml.datasets import LabeledDataset
-from fuzzy_ml.partitioning.clip import (
-    regulator,
-    find_indices_to_closest_neighbors,
-    CategoricalLearningInducedPartitioning as CLIP,
-)
-
+from fuzzy_ml.partitioning.clip import CategoricalLearningInducedPartitioning as CLIP
+from fuzzy_ml.partitioning.clip import find_indices_to_closest_neighbors, regulator
+from fuzzy_ml.utils import set_rng
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -52,7 +47,8 @@ class TestCLIP(unittest.TestCase):
         Returns:
             None
         """
-        # a new cluster is created in the input dimension based on the presented value
+        # a new cluster is created in the input dimension based on the
+        # presented value
         dimension = 1
         element = torch.tensor([0.0, 3.0, 2.0, 3], device=AVAILABLE_DEVICE)
         terms = [

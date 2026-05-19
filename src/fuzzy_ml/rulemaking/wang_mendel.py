@@ -2,18 +2,18 @@
 Functions related to the fuzzy logic rule creation process outlined in the Wang-Mendel Method.
 """
 
-from typing import Type, List
 from operator import itemgetter
+from typing import List, Type
 
-import torch
 import numpy as np
-from regime import Node
-from fuzzy.relations.t_norm import TNorm
-from fuzzy.logic.variables import LinguisticVariables
+import torch
 from fuzzy.logic.rule import Rule
-
+from fuzzy.logic.variables import LinguisticVariables
+from fuzzy.relations.t_norm import TNorm
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.rulemaking.common import find_maximum_fuzzy_terms
+
+from regime import Node
 
 
 class WangMendelMethod(Node):

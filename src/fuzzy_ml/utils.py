@@ -5,8 +5,8 @@ Provides utility functions that help guarantee reproducibility.
 import os
 import random
 
-import torch
 import numpy as np
+import torch
 
 
 def set_rng(seed: int) -> None:

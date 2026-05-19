@@ -7,12 +7,12 @@ such that each fuzzy set has reasonable spread or coverage of the domain space.
 from typing import List
 
 import torch
-from fuzzy.sets import FuzzySet
 from fuzzy.logic.variables import LinguisticVariables
-from regime import hyperparameter
-
+from fuzzy.sets import FuzzySet
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.partitioning.meta import MetaPartitioner
+
+from regime import hyperparameter
 
 
 class EqualPartitioning(MetaPartitioner):

@@ -6,14 +6,12 @@ import unittest
 
 import torch
 from fuzzy.logic.rule import Rule
-from fuzzy.relations.t_norm import Product
 from fuzzy.relations.n_ary import NAryRelation
-
+from fuzzy.relations.t_norm import Product
 from fuzzy_ml.pruning.rpy2.rough_theory import (
     find_unique_premise_variables,
     reduce_fuzzy_logic_rules_with_rough_sets,
 )
-
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -161,35 +159,92 @@ class TestRuleReduction(unittest.TestCase):
         Returns:
             None
         """
+
+        self.rules = [
+            Rule(
+                premise=Product(
+                    (0, 0), (1, 0), (2, 0), (3, 0), device=AVAILABLE_DEVICE
+                ),
+                consequence=NAryRelation((4, 0), device=AVAILABLE_DEVICE),
+            ),
+            Rule(
+                premise=Product(
+                    (0, 0), (1, 1), (2, 1), (3, 1), device=AVAILABLE_DEVICE
+                ),
+                consequence=NAryRelation((4, 0), device=AVAILABLE_DEVICE),
+            ),
+            Rule(
+                premise=Product(
+                    (0, 2), (1, 1), (2, 1), (3, 1), device=AVAILABLE_DEVICE
+                ),
+                consequence=NAryRelation((4, 0), device=AVAILABLE_DEVICE),
+            ),
+            Rule(
+                premise=Product(
+                    (0, 1), (1, 2), (2, 0), (3, 2), device=AVAILABLE_DEVICE
+                ),
+                consequence=NAryRelation((4, 0), device=AVAILABLE_DEVICE),
+            ),
+            Rule(
+                premise=Product(
+                    (0, 2), (1, 0), (2, 0), (3, 0), device=AVAILABLE_DEVICE
+                ),
+                consequence=NAryRelation((4, 0), device=AVAILABLE_DEVICE),
+            ),
+            Rule(
+                premise=Product(
+                    (0, 0), (1, 2), (2, 0), (3, 1), device=AVAILABLE_DEVICE
+                ),
+                consequence=NAryRelation((4, 0), device=AVAILABLE_DEVICE),
+            ),
+            Rule(
+                premise=Product(
+                    (0, 1), (1, 0), (2, 1), (3, 2), device=AVAILABLE_DEVICE
+                ),
+                consequence=NAryRelation((4, 0), device=AVAILABLE_DEVICE),
+            ),
+        ]
+
+        q_values = [
+            [0.75, 0.25],
+            [0.15, 1.35],
+            [1.57, 0.23],
+            [1.98, 0.62],
+            [0.11, 0.86],
+            [0.49, 0.54],
+            [2.16, 0.88],
+        ]
+
         actual_rules, output_values = reduce_fuzzy_logic_rules_with_rough_sets(
             self.rules,
             t_norm=Product,
             device=AVAILABLE_DEVICE,
-            output_values=torch.tensor(
-                [
-                    [0.5982, 0.3638],
-                    [-0.4473, -1.3327],
-                    [-1.7578, 0.6419],
-                    [-1.3145, 1.7113],
-                    [1.4630, 0.9406],
-                    [0.3238, 0.7816],
-                    [0.7368, 0.4987],
-                    [-1.4179, 0.0476],
-                    [-0.2674, -0.3777],
-                    [0.3399, -1.2760],
-                    [1.1519, 2.5623],
-                    [-1.5076, -0.9596],
-                    [1.1151, -0.3059],
-                    [0.4684, 0.7088],
-                    [-0.6936, -0.5474],
-                    [1.2732, -0.8924],
-                    [-0.5352, -0.7027],
-                    [-0.3630, 0.3177],
-                    [-0.6501, 0.1239],
-                    [-1.0044, 0.7831],
-                    [-1.7858, -0.2264],
-                ]
-            ),
+            output_values=torch.tensor(q_values),
+            # output_values=torch.tensor(
+            #     [
+            #         [0.5982, 0.3638],
+            #         [-0.4473, -1.3327],
+            #         [-1.7578, 0.6419],
+            #         [-1.3145, 1.7113],
+            #         [1.4630, 0.9406],
+            #         [0.3238, 0.7816],
+            #         [0.7368, 0.4987],
+            #         [-1.4179, 0.0476],
+            #         [-0.2674, -0.3777],
+            #         [0.3399, -1.2760],
+            #         [1.1519, 2.5623],
+            #         [-1.5076, -0.9596],
+            #         [1.1151, -0.3059],
+            #         [0.4684, 0.7088],
+            #         [-0.6936, -0.5474],
+            #         [1.2732, -0.8924],
+            #         [-0.5352, -0.7027],
+            #         [-0.3630, 0.3177],
+            #         [-0.6501, 0.1239],
+            #         [-1.0044, 0.7831],
+            #         [-1.7858, -0.2264],
+            #     ]
+            # ),
         )
         expected_rules = [
             Rule(

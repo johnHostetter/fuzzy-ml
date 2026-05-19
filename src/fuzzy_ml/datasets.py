@@ -3,21 +3,21 @@ Implements classes or functions related to datasets.
 """
 
 import csv
-from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Dict, Any, Union, Tuple
+from pathlib import Path
+from typing import Any, Dict, List, Tuple, Union
 
+import numpy as np
+import pandas as pd
 import rpy2
 import rpy2.robjects as ro
 import rpy2.robjects.packages as rpackages
+import sklearn.datasets
+import torch
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
-import torch
 from torch.utils.data import Dataset
 from torchvision import datasets
-import sklearn.datasets
-import pandas as pd
-import numpy as np
 
 
 @dataclass
@@ -154,7 +154,8 @@ class RegressionDatasets:
         Returns:
             The dataset configuration.
         """
-        # the dataset is not available in RKEEL, so must be downloaded from OpenML
+        # the dataset is not available in RKEEL, so must be downloaded from
+        # OpenML
         openml_results: dict = sklearn.datasets.fetch_openml(
             data_id=dataset_id, return_X_y=False, as_frame=True, parser="auto"
         )
@@ -250,7 +251,7 @@ def load_from_openml_and_split(
         # pylint: disable=no-member
         print(dataset.data.shape)
         data_frame: pd.DataFrame = dataset.data
-        data_frame["target"] = dataset.target.values
+        data_frame["target"] = dataset.target.options
     else:
         raise ValueError("The dataset is not a dictionary.")
     # https://stackoverflow.com/questions/38250710/how-to-split-data-into-3-sets-train-validation-and-test
@@ -290,6 +291,6 @@ def convert_data_frame_to_supervised_dataset(
     Returns:
         A supervised dataset.
     """
-    input_data = torch.Tensor(data_frame[input_features].values)
-    output_data = torch.Tensor(data_frame[target_features].values)
+    input_data = torch.Tensor(data_frame[input_features].options)
+    output_data = torch.Tensor(data_frame[target_features].options)
     return LabeledDataset(data=input_data, labels=output_data.unsqueeze(dim=-1))

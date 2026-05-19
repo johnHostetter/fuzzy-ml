@@ -5,7 +5,6 @@ Test the project's interface to installing and importing R packages.
 from unittest import TestCase
 
 import rpy2.robjects.packages as rpackages
-
 from fuzzy_ml.rpy2.packages import install_r_packages
 
 

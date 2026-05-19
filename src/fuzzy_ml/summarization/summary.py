@@ -5,9 +5,8 @@ Implements the linguistic summary code and its necessary supporting functions.
 from typing import Callable, Union
 
 import torch
-from fuzzy.relations.t_norm import TNorm
 from fuzzy.logic.knowledge_base import KnowledgeBase
-
+from fuzzy.relations.t_norm import TNorm
 from fuzzy_ml.summarization.query import Query
 
 
@@ -26,13 +25,15 @@ class Summary:
     ):
         self.device = device
         self.knowledge_base = knowledge_base
-        # a family of fuzzy sets that describe a concept (e.g., young) in their dimension
+        # a family of fuzzy sets that describe a concept (e.g., young) in their
+        # dimension
         self.granulation = self.knowledge_base.select_by_tags(
             tags={"premise", "group"}
         )["item"][0]
         self.engine: TNorm = self.knowledge_base.rule_base.premises
         self.quantifier = (
-            quantifier  # a fuzzy set describing a quantity in agreement (e.g., most)
+            # a fuzzy set describing a quantity in agreement (e.g., most)
+            quantifier
         )
 
         if weights is None:  # if the i'th item

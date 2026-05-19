@@ -6,18 +6,16 @@ import os
 import pathlib
 import unittest
 
-import torch
 import numpy as np
-
-from fuzzy_ml.utils import set_rng
+import torch
 from fuzzy_ml.clustering.empirical import (
-    multimodal_density,
-    find_local_maxima,
-    select_prototypes,
-    reduce_partitioning,
     find_empirical_fuzzy_sets,
+    find_local_maxima,
+    multimodal_density,
+    reduce_partitioning,
+    select_prototypes,
 )
-
+from fuzzy_ml.utils import set_rng
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

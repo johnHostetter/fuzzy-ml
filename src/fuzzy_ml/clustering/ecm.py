@@ -3,15 +3,15 @@ Implements the Evolving Clustering Method as described in the DENFIS paper.
 """
 
 import gc
-from typing import List, Tuple, Any, Union
+from typing import Any, List, Tuple, Union
 
-import torch
 import numpy as np
-from regime import Node, hyperparameter
-
+import torch
 from fuzzy_ml import LabeledGaussian
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.fetchers import fetch_labeled_dataset
+
+from regime import Node, hyperparameter
 
 
 def general_euclidean_distance(
@@ -101,7 +101,8 @@ class EvolvingClusteringMethod(Node):
                 # Step 1: If all examples of the data stream have been processed, the algorithm
                 # is finished. Else, the current input example, $x_i$, is taken and the distances
                 # between this example and all $n$ already created cluster
-                # centers Cc_j, D_{ij} = ||x_{i} - Cc_{j}||, j = 1, 2, ..., n, are calculated.
+                # centers Cc_j, D_{ij} = ||x_{i} - Cc_{j}||, j = 1, 2, ..., n,
+                # are calculated.
 
                 with torch.no_grad():
                     distances: torch.Tensor = general_euclidean_distance(
@@ -126,7 +127,8 @@ class EvolvingClusteringMethod(Node):
                         #
                         # In this case, neither a new cluster is created, nor are any existing
                         # clusters updated (the cases of $x_4$ and $x_6$ in Fig. 2);
-                        # the algorithm returns to Step 1. Else—go to the next step.
+                        # the algorithm returns to Step 1. Else—go to the next
+                        # step.
                         labeled_clusters.increment_support(
                             min_and_argmin.indices.item()
                         )
@@ -137,7 +139,8 @@ class EvolvingClusteringMethod(Node):
                         # S_{ij} = D_{ij} + Ru_{j}, j = 1, 2, ..., n, and then
                         # choosing the cluster center with the minimum value S_{ia}:
                         #
-                        #     S_{ia} = D_{ia} + Ru_{a} = min(S_{ij}), j = 1, 2, ..., n.
+                        # S_{ia} = D_{ia} + Ru_{a} = min(S_{ij}), j = 1, 2,
+                        # ..., n.
                         distances_from_farthest_edge = (
                             distances + labeled_clusters.get_widths().flatten()
                         )
@@ -183,7 +186,8 @@ class EvolvingClusteringMethod(Node):
                                 )
                                 labeled_clusters._widths[0] = torch.nn.Parameter(values)
 
-                                # keep a running mean approximation of the cluster center
+                                # keep a running mean approximation of the
+                                # cluster center
                                 labeled_clusters._centers[0][nearest_cluster_idx] = (
                                     torch.nn.Parameter(
                                         (

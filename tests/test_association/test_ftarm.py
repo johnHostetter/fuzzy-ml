@@ -5,22 +5,18 @@ and its necessary helper functions.
 
 import datetime
 import unittest
-from typing import Tuple, Dict, Any, List
+from typing import Any, Dict, List, Tuple
 
-import torch
 import numpy as np
 import pandas as pd
-from fuzzy.logic.variables import LinguisticVariables
+import torch
 from fuzzy.logic.knowledge_base import KnowledgeBase
-from fuzzy.sets import FuzzySetGroup, Triangular, Gaussian, Membership
-
+from fuzzy.logic.variables import LinguisticVariables
+from fuzzy.sets import FuzzySetGroup, Gaussian, Membership, Triangular
+from fuzzy_ml.association.temporal import AssociationRule
+from fuzzy_ml.association.temporal import FuzzyTemporalAssocationRuleMining as FTARM
+from fuzzy_ml.association.temporal import TemporalInformationTable as TI
 from fuzzy_ml.utils import set_rng
-from fuzzy_ml.association.temporal import (
-    TemporalInformationTable as TI,
-    FuzzyTemporalAssocationRuleMining as FTARM,
-    AssociationRule,
-)
-
 
 set_rng(5)
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -180,7 +176,8 @@ class TestFTARM(unittest.TestCase):
         # uninitialized hyperparameters should be None
         self.assertEqual({"min_support": None, "min_confidence": None}, hyperparameters)
 
-        # test that module path to the class hyperparameters is correctly recognized
+        # test that module path to the class hyperparameters is correctly
+        # recognized
         actual_hyperparameters_dict = FTARM.make_hyperparameters_dict()
         expected_hyperparameters_dict: Dict[str, Any] = {
             "fuzzy_ml": {
@@ -207,12 +204,13 @@ class TestFTARM(unittest.TestCase):
         input_granulation: List[FuzzySetGroup] = knowledge_base.select_by_tags(
             tags={"premise", "group"}
         )["item"]
-        assert len(input_granulation) == 1  # there should only be 1 matching item
+        # there should only be 1 matching item
+        assert len(input_granulation) == 1
         input_granulation: FuzzySetGroup = input_granulation[0]
         cols = sorted(set(dataframe.columns) - {"date"})
         actual_memberships: Membership = input_granulation(
             torch.tensor(
-                dataframe[cols].values, dtype=torch.float32, device=AVAILABLE_DEVICE
+                dataframe[cols].options, dtype=torch.float32, device=AVAILABLE_DEVICE
             )
         )
         expected_membership = torch.tensor(
@@ -248,7 +246,7 @@ class TestFTARM(unittest.TestCase):
         # temporal items D and E come in the second time period,
         # all others occur in the first time period
         assert np.allclose(
-            ti_table.starting_periods.values, np.array([[0, 0, 0, 1, 1]])
+            ti_table.starting_periods.options, np.array([[0, 0, 0, 1, 1]])
         )
 
         # now checking that FTARM creates the same TI Table as above
@@ -266,7 +264,7 @@ class TestFTARM(unittest.TestCase):
         # temporal items D and E come in the second time period,
         # all others occur in the first time period
         assert np.allclose(
-            ftarm.ti_table.starting_periods.values, np.array([[0, 0, 0, 1, 1]])
+            ftarm.ti_table.starting_periods.options, np.array([[0, 0, 0, 1, 1]])
         )
 
     def test_step_2(self) -> None:
@@ -389,7 +387,7 @@ class TestFTARM(unittest.TestCase):
 
         actual_antecedents_memberships: Membership = ftarm.granulation(
             torch.tensor(
-                dataframe[ftarm.variables].values,
+                dataframe[ftarm.variables].options,
                 dtype=torch.float32,
                 device=AVAILABLE_DEVICE,
             )
@@ -543,7 +541,7 @@ class TestFTARM(unittest.TestCase):
 
         starting_periods_per_item_in_each_candidate = [
             [
-                ftarm.ti_table.starting_periods.values[0, var_idx]
+                ftarm.ti_table.starting_periods.options[0, var_idx]
                 for var_idx in candidate_indices
             ]
             for candidate_indices in item_indices_in_each_candidate
@@ -557,7 +555,8 @@ class TestFTARM(unittest.TestCase):
             [1, 1],
         ]
 
-        # get the maximum starting period within each candidate to calculate fuzzy temporal support
+        # get the maximum starting period within each candidate to calculate
+        # fuzzy temporal support
         max_starting_periods = np.array(
             starting_periods_per_item_in_each_candidate
         ).max(axis=1)
@@ -565,7 +564,7 @@ class TestFTARM(unittest.TestCase):
         assert np.allclose(max_starting_periods, np.array([0, 1, 1, 1, 1, 1]))
 
         num_of_transactions_per_candidate = [
-            ftarm.ti_table.size_of_transactions_per_time_granule.values[idx:].sum()
+            ftarm.ti_table.size_of_transactions_per_time_granule.options[idx:].sum()
             for idx in max_starting_periods
         ]
         num_of_transactions_per_candidate = np.array(num_of_transactions_per_candidate)
@@ -699,7 +698,8 @@ class TestFTARM(unittest.TestCase):
             device=AVAILABLE_DEVICE,
         )
 
-        # required to build the lattice structure which is later used to find rules
+        # required to build the lattice structure which is later used to find
+        # rules
         _ = ftarm.find_candidates()
 
         actual_rules = ftarm.find_association_rules(min_confidence=self.min_confidence)
@@ -828,7 +828,8 @@ class TestFTARM(unittest.TestCase):
             device=AVAILABLE_DEVICE,
         )
 
-        # required to build the lattice structure which is later used to find rules
+        # required to build the lattice structure which is later used to find
+        # rules
         _ = ftarm.find_candidates()
 
         actual_closed_itemsets = ftarm.find_closed_itemsets()
@@ -856,7 +857,8 @@ class TestFTARM(unittest.TestCase):
             device=AVAILABLE_DEVICE,
         )
 
-        # required to build the lattice structure which is later used to find rules
+        # required to build the lattice structure which is later used to find
+        # rules
         _ = ftarm.find_candidates()
 
         actual_maximal_itemsets = ftarm.find_maximal_itemsets()

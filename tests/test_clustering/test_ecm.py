@@ -6,16 +6,12 @@ import os
 import pathlib
 import unittest
 
-import torch
 import numpy as np
+import torch
 from fuzzy.sets import Gaussian
-
+from fuzzy_ml.clustering.ecm import EvolvingClusteringMethod as ECM
+from fuzzy_ml.clustering.ecm import general_euclidean_distance
 from fuzzy_ml.datasets import LabeledDataset
-from fuzzy_ml.clustering.ecm import (
-    EvolvingClusteringMethod as ECM,
-    general_euclidean_distance,
-)
-
 
 AVAILABLE_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 DISTANCE_THRESHOLD = 0.7

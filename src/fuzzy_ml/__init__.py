@@ -5,7 +5,6 @@ This module contains helpful features used throughout the fuzzy-ml package.
 from typing import List, Union
 
 import torch
-
 from fuzzy.sets import Gaussian
 
 

@@ -2,9 +2,9 @@
 The partitioning module contains classes that partition data into fuzzy sets.
 """
 
-from .meta import MetaPartitioner
-from .equal import EqualPartitioning
 from .clip import CategoricalLearningInducedPartitioning
+from .equal import EqualPartitioning
+from .meta import MetaPartitioner
 
 __all__ = [
     "MetaPartitioner",

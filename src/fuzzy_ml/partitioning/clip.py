@@ -5,14 +5,15 @@ Implements the Categorical Learning Induced Partitioning (CLIP) algorithm.
 import gc
 from typing import List
 
-import torch
 import numpy as np
-from fuzzy.sets import Gaussian, FuzzySet
+import torch
 from fuzzy.logic.variables import LinguisticVariables
-from regime import hyperparameter
-
+from fuzzy.sets import FuzzySet, Gaussian
 from fuzzy_ml.datasets import LabeledDataset
 from fuzzy_ml.partitioning.meta import MetaPartitioner
+
+from regime import hyperparameter
+
 from .utils import find_widths, regulator
 
 
@@ -81,7 +82,8 @@ class CategoricalLearningInducedPartitioning(MetaPartitioner):
                     device=device,
                 )
             else:
-                # calculate the similarity between the input and existing fuzzy clusters
+                # calculate the similarity between the input and existing fuzzy
+                # clusters
                 for dim, _ in enumerate(observation):
                     membership_degrees: torch.Tensor = self.terms[dim](
                         observation[dim]
@@ -92,7 +94,8 @@ class CategoricalLearningInducedPartitioning(MetaPartitioner):
                     if torch.max(membership_degrees) <= epsilon:
                         #  best matched cluster is unable to give satisfactory
                         #  description of the presented value
-                        # a new cluster is created in the dimension based on the presented value
+                        # a new cluster is created in the dimension based on
+                        # the presented value
                         with torch.no_grad():
                             (
                                 left_neighbor_idx,
@@ -137,7 +140,8 @@ class CategoricalLearningInducedPartitioning(MetaPartitioner):
                             indices = torch.tensor(indices, device=device)
                             new_sigma = new_sigma[None, :]
 
-                            # update the existing terms to make room for the new term
+                            # update the existing terms to make room for the
+                            # new term
                             self.terms[dim]._widths[0] = torch.nn.Parameter(
                                 self.terms[dim]
                                 ._widths[0]
@@ -154,7 +158,8 @@ class CategoricalLearningInducedPartitioning(MetaPartitioner):
                             if (
                                 len(sigmas) == 2
                             ):  # if we edited both left and right neighbors
-                                new_sigma = new_sigma[0][-1]  # only use a single value
+                                # only use a single value
+                                new_sigma = new_sigma[0][-1]
                             self.terms[dim].extend(
                                 centers=observation[dim].reshape(
                                     1, 1
