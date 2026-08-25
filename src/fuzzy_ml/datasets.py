@@ -11,13 +11,14 @@ import numpy as np
 import pandas as pd
 import rpy2
 import rpy2.robjects as ro
-import rpy2.robjects.packages as rpackages
 import sklearn.datasets
 import torch
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 from torch.utils.data import Dataset
 from torchvision import datasets
+
+from fuzzy_ml.rpy2.packages import install_rkeel
 
 
 @dataclass
@@ -109,9 +110,7 @@ class RegressionDatasets:
             "pol": 44133,
         }
         self.datasets = {}
-        utils = rpackages.importr("utils")
-        utils.chooseCRANmirror(ind=1)
-        utils.install_packages("RKEEL")
+        install_rkeel()
         self.keel_package = importr("RKEEL")
         self.load_datasets()
 

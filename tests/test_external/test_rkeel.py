@@ -12,10 +12,9 @@ The following may be necessary on Windows to set the 'R_HOME' for rpy2 correctly
 import unittest
 
 import rpy2
-import rpy2.robjects.packages as rpackages
-
-# from rpy2 import robjects
 from rpy2.robjects.packages import importr
+
+from fuzzy_ml.rpy2.packages import install_rkeel
 
 
 class TestRKEEL(unittest.TestCase):
@@ -25,44 +24,7 @@ class TestRKEEL(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        utils = rpackages.importr("utils")
-        utils.chooseCRANmirror(ind=1)
-
-        # download the dependencies
-
-        # dependencies = [
-        #     "downloader",
-        #     "R6",
-        #     "XML",
-        #     "doParallel",
-        #     "foreach",
-        #     "gdata",
-        #     "RKEELjars",
-        #     "RKEELdata",
-        #     "pmml",
-        #     "arules",
-        #     "rJava",
-        # ]
-        # for dependency in dependencies:
-        #     utils.install_packages(dependency)
-        #
-        # # install RKEEL from CRAN archive
-        #
-        # robjects.r(
-        #     "jars <- 'https://cran.r-project.org/src/contrib/Archive/RKEELjars/RKEELjars_1.0.20.tar.gz'"
-        # )  # RKEELjars was archived due to a policy violation
-        # robjects.r(
-        #     "rkeel <- 'https://cran.r-project.org/src/contrib/Archive/RKEEL/RKEEL_1.3.3.tar.gz'"
-        # )  # RKEEL was archived due to RKEELjars being archived
-        # robjects.r(
-        #     "install.packages(jars, repos=NULL, type='source')"
-        # )  # install RKEELjars from URL
-        # robjects.r(
-        #     "install.packages(rkeel, repos=NULL, type='source')"
-        # )  # install RKEEL from URL
-        # keel_package = importr("RKEEL")
-        utils.install_packages("RKEEL")
+        install_rkeel()
         self.keel_package = importr("RKEEL")
 
     def test_rkeel(self) -> None:
