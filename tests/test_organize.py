@@ -15,20 +15,22 @@ base, which frequent_discernible()/clip_frequent_discernible() themselves
 cannot currently exercise (see tests/test_fyd/test_heuristic.py's module
 docstring for why).
 
-Not covered here: run()'s "found under KnowledgeBase.create's own
-module.name key" branch (the default path, vs. a Node like FTARM producing
-"knowledge_base" directly). Exercising it for real needs a genuinely valid
-LinguisticVariables - regime.Resource is a namedtuple, so it must go into a
-Python set(), which requires LinguisticVariables to be hashable; confirmed
-directly that a plain LinguisticVariables(inputs=[], targets=[]) is not
-(`TypeError: unhashable type`) - constructing a hashable one is exactly the
-same real-FuzzySet complexity this module's other tests avoid.
+run()'s "found under KnowledgeBase.create's own module.name key" branch
+(the default path, vs. a Node like FTARM producing "knowledge_base"
+directly) needs a real LinguisticVariables placed inside a regime.Resource -
+a namedtuple, so it must go into a Python set(), which requires
+LinguisticVariables to be hashable. fuzzy-theory's LinguisticVariables is a
+plain @dataclass, and a plain @dataclass's auto-generated __eq__ disables
+__hash__ by default - fixed upstream (fuzzy-theory commit `03c1015`,
+`@dataclass(eq=False)`) rather than worked around here.
 """
 
 import unittest
+import unittest.mock
 
 import torch
 from fuzzy.logic.knowledge_base import KnowledgeBase
+from fuzzy.logic.variables import LinguisticVariables
 from regime import Node, Resource, hyperparameter
 
 from fuzzy_ml.organize import SelfOrganize
@@ -148,12 +150,55 @@ class TestSelfOrganizeRun(unittest.TestCase):
         )
         self.assertEqual(self_organize.run(), 6.0)
 
-    def test_run_raises_when_neither_access_key_is_present(self) -> None:
+    def test_run_returns_result_of_the_real_knowledge_base_create(self) -> None:
         """
-        run() specifically looks for either KnowledgeBase.create's own
-        module.name key or a literal "knowledge_base" key in the results -
-        a Node with some other resource_name produces neither, so run()
-        must raise rather than silently returning the wrong thing.
+        Without a "knowledge_base"-producing algorithm, run() finds the
+        result under KnowledgeBase.create's own module.name key (the
+        default branch, as opposed to a Node like FTARM producing it under
+        the literal "knowledge_base" key - see the other run() test above).
+        An empty LinguisticVariables/rules pair is a valid (if degenerate,
+        warning-producing) KnowledgeBase.create() call - confirmed directly.
+        """
+
+        class Unrelated(Node):
+            """A Node whose resource_name has nothing to do with knowledge_base."""
+
+            def __init__(self, resource_name: str = "something_else"):
+                super().__init__(resource_name)
+
+            def __call__(self, device: torch.device):
+                # must be non-None: Regime cannot distinguish "this process
+                # returned None" from "this resource was never produced" -
+                # returning None here would make the *next* vertex look
+                # unproduced and raise for an unrelated reason.
+                return "irrelevant"
+
+        self_organize = SelfOrganize(
+            algorithms={"other": Unrelated()}, device=AVAILABLE_DEVICE
+        ).setup(
+            resources={
+                Resource(
+                    name="linguistic_variables",
+                    value=LinguisticVariables(inputs=[], targets=[]),
+                ),
+                Resource(name="rules", value=()),
+            },
+            configuration={},
+        )
+        with self.assertWarns(UserWarning):
+            result = self_organize.run()
+        self.assertIsInstance(result, KnowledgeBase)
+
+    def test_run_raises_when_setup_is_incomplete(self) -> None:
+        """
+        A Node with some other resource_name still leaves the real
+        KnowledgeBase.create wired in (get_regime_edges() only skips it for
+        a "knowledge_base"-named producer) - without linguistic_variables/
+        rules resources to satisfy it, Regime.start() itself raises
+        (a resource it needs was never produced) before run() ever gets a
+        results dict to inspect. This is Regime's own error, not
+        SelfOrganize.run()'s "KnowledgeBase not found in results" raise -
+        see the mocked test below for that one specifically.
         """
 
         class WrongResourceName(Node):
@@ -170,6 +215,27 @@ class TestSelfOrganizeRun(unittest.TestCase):
         ).setup(resources=set(), configuration={})
         with self.assertRaises(ValueError):
             self_organize.run()
+
+    def test_run_raises_when_neither_access_key_is_present(self) -> None:
+        """
+        run()'s own final check: even if Regime.start() completes and
+        returns a real results dict, run() must still raise if neither
+        KnowledgeBase.create's own module.name key nor a literal
+        "knowledge_base" key is in it, rather than silently returning
+        something else. Under SelfOrganize's normal wiring this branch is
+        not reachable through a real run (get_regime_edges() always ends up
+        producing one or the other key when a run completes at all - see the
+        test above), so Regime.start() is mocked here to isolate run()'s own
+        logic directly.
+        """
+        self_organize = SelfOrganize(
+            algorithms={"kb": DummyKnowledgeBaseProducer()}, device=AVAILABLE_DEVICE
+        )
+        with unittest.mock.patch.object(
+            self_organize.regime, "start", return_value={"unrelated_key": "value"}
+        ):
+            with self.assertRaisesRegex(ValueError, "KnowledgeBase not found"):
+                self_organize.run()
 
 
 if __name__ == "__main__":
