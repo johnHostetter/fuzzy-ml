@@ -250,7 +250,7 @@ def load_from_openml_and_split(
         # pylint: disable=no-member
         print(dataset.data.shape)
         data_frame: pd.DataFrame = dataset.data
-        data_frame["target"] = dataset.target.options
+        data_frame["target"] = dataset.target.values
     else:
         raise ValueError("The dataset is not a dictionary.")
     # https://stackoverflow.com/questions/38250710/how-to-split-data-into-3-sets-train-validation-and-test
@@ -290,6 +290,6 @@ def convert_data_frame_to_supervised_dataset(
     Returns:
         A supervised dataset.
     """
-    input_data = torch.Tensor(data_frame[input_features].options)
-    output_data = torch.Tensor(data_frame[target_features].options)
+    input_data = torch.Tensor(data_frame[input_features].values)
+    output_data = torch.Tensor(data_frame[target_features].values)
     return LabeledDataset(data=input_data, labels=output_data.unsqueeze(dim=-1))
