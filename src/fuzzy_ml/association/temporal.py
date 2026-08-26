@@ -35,7 +35,7 @@ class TemporalInformationTable:
         # find the earliest starting period for each temporal item in the
         # dataframe
         self.first_transaction_indices = (
-            self.dataframe[self.variables].options != 0
+            self.dataframe[self.variables].values != 0
         ).argmax(axis=0)
         self.size_of_transactions_per_time_granule = self.dataframe.groupby(
             "date"
@@ -102,7 +102,7 @@ class TemporalInformationTable:
             tuple(pair[0] for pair in candidate) for candidate in candidates
         ]
         starting_periods_per_item_in_each_candidate = [
-            [self.starting_periods.options[0, var_idx] for var_idx in candidate_indices]
+            [self.starting_periods.values[0, var_idx] for var_idx in candidate_indices]
             for candidate_indices in item_indices_in_each_candidate
         ]
         # get the maximum starting period within each candidate to calculate
@@ -203,7 +203,7 @@ class FuzzyTemporalAssocationRuleMining(
             # individually
             membership: Membership = self.granulation(
                 torch.tensor(
-                    dataframe[self.variables].options, device=self.device
+                    dataframe[self.variables].values, device=self.device
                 ).float()
             )
             return membership.degrees * membership.mask
@@ -213,7 +213,7 @@ class FuzzyTemporalAssocationRuleMining(
             *[list(candidate) for candidate in candidates], device=self.device
         )
         antecedents_memberships = self.granulation(
-            torch.tensor(dataframe[self.variables].options, device=self.device).float()
+            torch.tensor(dataframe[self.variables].values, device=self.device).float()
         )
         return engine(antecedents_memberships).degrees
 
@@ -253,14 +253,14 @@ class FuzzyTemporalAssocationRuleMining(
         if candidates is None:  # 1-itemsets
             # step 3
             if starting_period is None:
-                starting_periods = self.ti_table.starting_periods.options[0]
+                starting_periods = self.ti_table.starting_periods.values[0]
             else:
                 number_of_temporal_items = self.ti_table.starting_periods.shape[1]
                 starting_periods = np.array(
                     [starting_period] * number_of_temporal_items
                 )
             num_of_possible_transactions_per_temporal_item = [
-                self.ti_table.size_of_transactions_per_time_granule.options[idx:].sum()
+                self.ti_table.size_of_transactions_per_time_granule.values[idx:].sum()
                 for idx in starting_periods
             ]
             denominator = torch.tensor(
@@ -279,7 +279,7 @@ class FuzzyTemporalAssocationRuleMining(
                     [starting_period] * len(candidates)
                 ).flatten()
             num_of_transactions_per_candidate = [
-                self.ti_table.size_of_transactions_per_time_granule.options[idx:].sum()
+                self.ti_table.size_of_transactions_per_time_granule.values[idx:].sum()
                 for idx in max_starting_periods
             ]
             num_of_transactions_per_candidate = np.array(

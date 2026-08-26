@@ -13,7 +13,13 @@ class LabeledGaussian(Gaussian):
     Gaussian cluster(s) with label(s).
     """
 
-    def __init__(self, centers, widths, device: torch.device, labels):
+    def __init__(
+        self,
+        centers,
+        widths,
+        device: torch.device,
+        labels,
+    ):
         super().__init__(centers, widths, device)
         self.supports: List[int] = [1] * centers.shape[0]
         self._labels: Union[None, List[torch.Tensor]] = (

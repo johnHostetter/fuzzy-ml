@@ -172,7 +172,7 @@ class TestFTARM(unittest.TestCase):
         Returns:
             None
         """
-        hyperparameters = FTARM._hyperparameters
+        hyperparameters = FTARM._hyperparameters  # pylint: disable=protected-access
         # uninitialized hyperparameters should be None
         self.assertEqual({"min_support": None, "min_confidence": None}, hyperparameters)
 
@@ -210,7 +210,7 @@ class TestFTARM(unittest.TestCase):
         cols = sorted(set(dataframe.columns) - {"date"})
         actual_memberships: Membership = input_granulation(
             torch.tensor(
-                dataframe[cols].options, dtype=torch.float32, device=AVAILABLE_DEVICE
+                dataframe[cols].values, dtype=torch.float32, device=AVAILABLE_DEVICE
             )
         )
         expected_membership = torch.tensor(
@@ -246,7 +246,7 @@ class TestFTARM(unittest.TestCase):
         # temporal items D and E come in the second time period,
         # all others occur in the first time period
         assert np.allclose(
-            ti_table.starting_periods.options, np.array([[0, 0, 0, 1, 1]])
+            ti_table.starting_periods.values, np.array([[0, 0, 0, 1, 1]])
         )
 
         # now checking that FTARM creates the same TI Table as above
@@ -264,7 +264,7 @@ class TestFTARM(unittest.TestCase):
         # temporal items D and E come in the second time period,
         # all others occur in the first time period
         assert np.allclose(
-            ftarm.ti_table.starting_periods.options, np.array([[0, 0, 0, 1, 1]])
+            ftarm.ti_table.starting_periods.values, np.array([[0, 0, 0, 1, 1]])
         )
 
     def test_step_2(self) -> None:
@@ -387,7 +387,7 @@ class TestFTARM(unittest.TestCase):
 
         actual_antecedents_memberships: Membership = ftarm.granulation(
             torch.tensor(
-                dataframe[ftarm.variables].options,
+                dataframe[ftarm.variables].values,
                 dtype=torch.float32,
                 device=AVAILABLE_DEVICE,
             )
@@ -541,7 +541,7 @@ class TestFTARM(unittest.TestCase):
 
         starting_periods_per_item_in_each_candidate = [
             [
-                ftarm.ti_table.starting_periods.options[0, var_idx]
+                ftarm.ti_table.starting_periods.values[0, var_idx]
                 for var_idx in candidate_indices
             ]
             for candidate_indices in item_indices_in_each_candidate
@@ -564,7 +564,7 @@ class TestFTARM(unittest.TestCase):
         assert np.allclose(max_starting_periods, np.array([0, 1, 1, 1, 1, 1]))
 
         num_of_transactions_per_candidate = [
-            ftarm.ti_table.size_of_transactions_per_time_granule.options[idx:].sum()
+            ftarm.ti_table.size_of_transactions_per_time_granule.values[idx:].sum()
             for idx in max_starting_periods
         ]
         num_of_transactions_per_candidate = np.array(num_of_transactions_per_candidate)
