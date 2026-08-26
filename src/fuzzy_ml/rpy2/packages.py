@@ -21,10 +21,15 @@ from rpy2.robjects.vectors import StrVector
 
 # RKEEL and pmml were both removed from CRAN's live index (pmml failed a
 # routine CRAN check on 2026-01-29; RKEEL was auto-archived the same day
-# since it depends on pmml), so install.packages("RKEEL")/("pmml") against
-# the live repo index no longer finds them. Both tarballs remain permanently
-# downloadable from CRAN's Archive - confirmed by actually installing and
-# running RKEEL.loadKeelDataset("iris") end to end from these exact URLs.
+# since it depends on pmml). install_rkeel() below always tries the live
+# CRAN index first for each - this URL is only the fallback for whichever
+# one isn't there. As of this writing, pmml has ALREADY been restored to
+# CRAN (2.6.1, published 2026-07-07 - confirmed empirically: the live
+# install.packages("pmml") attempt below succeeds on its own, no fallback
+# needed), while RKEEL itself is still archived and does still need this
+# URL. Both tarballs remain permanently downloadable from CRAN's Archive
+# regardless - confirmed by actually installing and running
+# RKEEL.loadKeelDataset("iris") end to end from these exact URLs.
 # RKEELjars (an older RKEEL dependency some earlier notes reference) is not
 # needed here - RKEEL 1.3.4 does not use it, and it is not archived anyway.
 _RKEEL_VERSION = "1.3.4"
@@ -76,10 +81,16 @@ def install_r_packages() -> None:
 
 def install_rkeel() -> None:
     """
-    Install RKEEL and its own archived dependency, pmml, from CRAN's Archive.
+    Install RKEEL and its own dependency, pmml.
 
-    See _ARCHIVED_PACKAGE_URLS's comment for why the live package names
-    alone no longer resolve.
+    Both were removed from CRAN's live index (see _ARCHIVED_PACKAGE_URLS's
+    comment) as of this writing, but this always tries the live CRAN index
+    first for each - if either is ever restored to CRAN, that plain
+    install.packages(name) call succeeds on its own and the archived tarball
+    is never touched. Only falls back to the exact CRAN Archive URL when the
+    live attempt leaves the package not installed (confirmed empirically: a
+    package not found on CRAN produces an R warning, not an exception, so
+    checking rpackages.isinstalled() afterward is a safe way to detect this).
 
     Returns:
         None
@@ -93,6 +104,10 @@ def install_rkeel() -> None:
     if names_to_install:
         utils.install_packages(StrVector(names_to_install))
 
-    for name, url in _ARCHIVED_PACKAGE_URLS.items():
+    for name, archive_url in _ARCHIVED_PACKAGE_URLS.items():
+        if rpackages.isinstalled(name):
+            continue
+        utils.install_packages(name)  # try the live CRAN index first
         if not rpackages.isinstalled(name):
-            utils.install_packages(url, repos=ro.NULL, type="source")
+            # not (yet) restored to CRAN - fall back to the archived tarball
+            utils.install_packages(archive_url, repos=ro.NULL, type="source")
