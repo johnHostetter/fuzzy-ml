@@ -15,14 +15,16 @@ import rpy2.robjects.packages as rpackages
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 
+from tests.test_external import skip_if_r_unavailable
+
 
 class TestRoughSets(unittest.TestCase):
     """
     Test the RoughSets package written in R.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @skip_if_r_unavailable
+    def setUp(self) -> None:
         utils = rpackages.importr("utils")
         utils.chooseCRANmirror(ind=1)
         utils.install_packages("frbs")

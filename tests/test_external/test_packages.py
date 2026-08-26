@@ -7,12 +7,15 @@ from unittest import TestCase
 import rpy2.robjects.packages as rpackages
 from fuzzy_ml.rpy2.packages import install_r_packages
 
+from tests.test_external import skip_if_r_unavailable
+
 
 class TestExternal(TestCase):
     """
     Test the project's interface to installing and importing R packages.
     """
 
+    @skip_if_r_unavailable
     def test_install_r_packages(self) -> None:
         """
         Test that R packages can be installed.

@@ -15,6 +15,7 @@ import rpy2
 from rpy2.robjects.packages import importr
 
 from fuzzy_ml.rpy2.packages import install_rkeel
+from tests.test_external import skip_if_r_unavailable
 
 
 class TestRKEEL(unittest.TestCase):
@@ -22,8 +23,8 @@ class TestRKEEL(unittest.TestCase):
     Test the RKEEL package written in R.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @skip_if_r_unavailable
+    def setUp(self) -> None:
         install_rkeel()
         self.keel_package = importr("RKEEL")
 
