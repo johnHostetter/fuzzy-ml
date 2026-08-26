@@ -22,7 +22,7 @@ def reduce_fuzzy_logic_rules_with_rough_sets(
     rules: List[Rule],
     t_norm: Type[TNorm],
     device: torch.device,
-    output_values: Union[torch.Tensor, np.array] = None,
+    output_values: Union[torch.Tensor, np.ndarray] = None,
     verbose: bool = False,
 ) -> Tuple[List[Rule], torch.Tensor]:
     """
@@ -210,7 +210,7 @@ def parse_reduced_rules(
                 ),  # list of strings to list of ints
             )  # map the (linguistic) variable indices to the (linguistic term) values
         )
-        if True or output_values is None:
+        if output_values is None:
             # the following is for Mamdani fuzzy logic controllers
             consequence = frozenset(
                 zip(  # the consequent will only have one variable
@@ -224,6 +224,27 @@ def parse_reduced_rules(
             )
             consequence = NAryRelation(*consequence, device=device)
         else:
+            # TODO(unverified, needs review): this branch (output_values is
+            # not None, i.e. TSK-style reduction) was previously dead code -
+            # the guard above used to be `if True or output_values is None:`,
+            # which always took the Mamdani branch regardless of what was
+            # passed in, so this line has (as far as can be determined) never
+            # actually executed. It cannot be exercised or verified in this
+            # sandboxed environment either, since RoughSets/rpy2 needs R
+            # packages that fail to install here (no writable R library
+            # configured - see tests/test_external's skip_if_r_unavailable).
+            # Specific concern worth checking once it CAN be run against
+            # real R output: the sibling Mamdani branch above identifies the
+            # consequence by output_variable_index (the actual output
+            # column's index in numpy_matrix); this branch instead uses
+            # len(final_rules) - the number of rules already accumulated so
+            # far, which grows across loop iterations and has no obvious
+            # relationship to an output variable's identity. That may be
+            # intentional (e.g. deliberately giving each TSK rule's
+            # consequence a distinct synthetic index), or it may be a bug
+            # that should instead read output_variable_index like the
+            # Mamdani branch does. Needs a real end-to-end run with a known
+            # RoughSets reduction result to tell which.
             consequence = NAryRelation((len(final_rules), 0), device=device)
         laplace = float(reduced_rule.rx("laplace")[0][0])
         if (
