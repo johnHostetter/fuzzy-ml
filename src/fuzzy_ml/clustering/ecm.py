@@ -174,7 +174,20 @@ class EvolvingClusteringMethod(Node):
                             # (the cases of $x_2$, $x_5$, $x_7$ and $x_9$ in Fig. 2).
                             # The algorithm returns to Step 1
                             with torch.no_grad():
-                                values = labeled_clusters._widths[0].index_copy(
+                                # fuzzy-theory moved centers/widths storage from bare
+                                # _centers/_widths attributes into self._params
+                                # (a DynamicParameterList) - _params.widths[0]/
+                                # _params.centers[0] is the sanctioned way to reach the
+                                # same underlying tensors now (see FuzzySet.extend()'s
+                                # identical index-then-reassign pattern). Reassigning
+                                # the whole list slot (rather than mutating an element
+                                # of the tensor __getitem__ returns in place) is
+                                # required: DynamicParameterList.__setitem__ is the
+                                # only thing that invalidates the class's cached
+                                # concatenated tensor, so an in-place element write
+                                # would leave get_widths()/get_centers() returning
+                                # stale cached data.
+                                widths = labeled_clusters._params.widths[0].index_copy(
                                     dim=0,
                                     index=torch.tensor(
                                         nearest_cluster_idx, device=device
@@ -184,28 +197,32 @@ class EvolvingClusteringMethod(Node):
                                     .clone()
                                     .detach(),
                                 )
-                                labeled_clusters._widths[0] = torch.nn.Parameter(values)
+                                labeled_clusters._params.widths[0] = torch.nn.Parameter(
+                                    widths
+                                )
 
                                 # keep a running mean approximation of the
                                 # cluster center
-                                labeled_clusters._centers[0][nearest_cluster_idx] = (
-                                    torch.nn.Parameter(
-                                        (
-                                            labeled_clusters.supports[
-                                                nearest_cluster_idx
-                                            ]
-                                            * labeled_clusters._centers[0][
-                                                nearest_cluster_idx
-                                            ]
-                                            + observation
-                                        )
-                                        / (
-                                            labeled_clusters.supports[
-                                                nearest_cluster_idx
-                                            ]
-                                            + 1
-                                        )
-                                    )
+                                new_center_value = (
+                                    labeled_clusters.supports[nearest_cluster_idx]
+                                    * labeled_clusters._params.centers[0][
+                                        nearest_cluster_idx
+                                    ]
+                                    + observation
+                                ) / (labeled_clusters.supports[nearest_cluster_idx] + 1)
+                                centers = labeled_clusters._params.centers[
+                                    0
+                                ].index_copy(
+                                    dim=0,
+                                    index=torch.tensor(
+                                        nearest_cluster_idx, device=device
+                                    ),
+                                    source=new_center_value.reshape(1, -1)
+                                    .clone()
+                                    .detach(),
+                                )
+                                labeled_clusters._params.centers[0] = (
+                                    torch.nn.Parameter(centers)
                                 )
 
                         del distances_from_farthest_edge

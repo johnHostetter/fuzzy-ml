@@ -141,15 +141,21 @@ class CategoricalLearningInducedPartitioning(MetaPartitioner):
                             new_sigma = new_sigma[None, :]
 
                             # update the existing terms to make room for the
-                            # new term
-                            self.terms[dim]._widths[0] = torch.nn.Parameter(
+                            # new term. fuzzy-theory moved widths storage from a
+                            # bare _widths attribute into self._params (a
+                            # DynamicParameterList) - _params.widths[0] is the
+                            # sanctioned way to reach the same underlying tensor
+                            # now (see FuzzySet.extend()'s identical
+                            # index-then-reassign pattern, and
+                            # fuzzy_ml.clustering.ecm's matching fix).
+                            self.terms[dim]._params.widths[0] = torch.nn.Parameter(
                                 self.terms[dim]
-                                ._widths[0]
+                                ._params.widths[0]
                                 .index_copy(
                                     dim=-1,  # was 0
                                     index=indices,
                                     source=new_sigma.float().to(
-                                        self.terms[dim]._widths[0].device
+                                        self.terms[dim]._params.widths[0].device
                                     ),
                                 )
                             )
