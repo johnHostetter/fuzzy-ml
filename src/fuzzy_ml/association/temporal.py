@@ -383,10 +383,17 @@ class FuzzyTemporalAssocationRuleMining(
             The superset itemsets.
         """
         candidate_indices = set()
+        # both loop-invariant: neither depends on itemset_1/itemset_2, and every
+        # vertex this loop adds is at lattice level (max_len_of_itemsets + 1), so
+        # it never matches possible_subsets_vertices' own lattice_eq filter either -
+        # confirmed safe to hoist rather than recomputing (an O(V) igraph scan, for
+        # possible_subsets_vertices) on every one of the O(n^2) combinations below.
+        available_subsets = {frozenset(items) for items in frequent_itemsets}
+        possible_subsets_vertices = self.knowledge_base.graph.vs.select(
+            lattice_eq=max_len_of_itemsets
+        )
         for itemset_1, itemset_2 in itertools.combinations(frequent_itemsets, 2):
             candidate = frozenset(itemset_1.union(itemset_2))
-            # apriori principle
-            available_subsets = {frozenset(items) for items in frequent_itemsets}
             required_subsets = {
                 frozenset(items) for items in itertools.combinations(candidate, 2)
             }
@@ -402,9 +409,6 @@ class FuzzyTemporalAssocationRuleMining(
                     lattice=(max_len_of_itemsets + 1),
                 )
 
-                possible_subsets_vertices = self.knowledge_base.graph.vs.select(
-                    lattice_eq=max_len_of_itemsets
-                )
                 edges_to_add = set()
                 for possible_subset_vertex in possible_subsets_vertices:
                     if set(possible_subset_vertex["item"]).issubset(candidate):
