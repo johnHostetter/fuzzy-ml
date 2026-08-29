@@ -1,6 +1,23 @@
 """
 Implements the Frequent-Yet-Discernible Method. More specifically, this script contains the
 primary function, as well as its supporting helper methods that assist in calculating the heuristic.
+
+Relationship to rough-theory's analysis chain (noted 2026-08-29): frequent_discernible()'s
+own pruning heuristic (data-driven scalar cardinality x graph centrality, below) is a
+bespoke, hand-built criterion - it never calls into rough-theory's RoughApproximation/
+RoughOperations/RoughDecisions (reducts, decision tables, approximation), even though
+KnowledgeBase's graph would now support that on demand:
+
+    from rough.decisions import RoughDecisions
+    analysis = RoughDecisions(graph=knowledge_base.graph, attribute_table=knowledge_base.attribute_table)
+
+See external/pypi/rough-theory's rough/granulation.py module docstring for why that
+pattern exists (KnowledgeBase itself only inherits RoughGranulation now, not the full
+chain, since nothing - including this file - ever used the analysis layers directly).
+This is the natural place a future rough-set-theoretic pruning criterion (an alternative
+to this file's own heuristic - e.g. dropping attributes/terms a reduct computation shows
+are dispensable) would plug in, per PySoft's PLANNED_FEATURES.md item #3 - not
+implemented here, just documented as the connection point.
 """
 
 import pathlib
