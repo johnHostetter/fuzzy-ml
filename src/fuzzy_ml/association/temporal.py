@@ -5,7 +5,8 @@ and its necessary helper functions.
 
 import collections
 import itertools
-from typing import List, Tuple, Union
+from enum import Enum
+from typing import Dict, List, Optional, Tuple, Union
 
 import igraph as ig
 import numpy as np
@@ -21,6 +22,15 @@ from regime import Node, hyperparameter
 AssociationRule = collections.namedtuple(
     "AssociationRule", ["antecedents", "consequents", "confidence"]
 )
+
+
+class EdgeWeightEnum(str, Enum):
+    """Which per-edge measure visualize_lattice() should visualize as edge thickness -
+    see FuzzyTemporalAssocationRuleMining._measure_itemset() for how each is computed."""
+
+    FREQUENCY = "frequency"  # raw occurrence count (scalar_cardinality)
+    SUPPORT = "support"  # normalized fuzzy temporal support ratio
+    CO_OCCURRENCE = "co_occurrence"  # time granules where the whole itemset co-occurs
 
 
 class TemporalInformationTable:
@@ -369,6 +379,45 @@ class FuzzyTemporalAssocationRuleMining(
             ]
         return None
 
+    def _measure_itemset(
+        self, itemset, support: Optional[torch.Tensor] = None
+    ) -> Dict[str, float]:
+        """
+        Computes the three measures EdgeWeightEnum can select between for a given
+        itemset - frequency (raw occurrence count), support (normalized fuzzy
+        temporal support ratio), and co_occurrence (how many time granules every
+        item in the itemset is jointly present in).
+
+        Args:
+            itemset: An itemset - an iterable of (variable_idx, term_idx) pairs, the
+                same shape frequent_temporal_items()/fuzzy_temporal_supports() already
+                use elsewhere in this class.
+            support: A precomputed fuzzy_temporal_supports() scalar for this itemset,
+                if the caller already has one (e.g. generate_candidates_of_length_two's
+                own batched supports tensor) - avoids a redundant call. Computed fresh
+                if not given.
+
+        Returns:
+            {"frequency": ..., "support": ..., "co_occurrence": ...}
+        """
+        if support is None:
+            support = self.fuzzy_temporal_supports([itemset])[0]
+        frequency = self.scalar_cardinality([itemset])[0]
+        # itemset elements are (variable_idx, term_idx) pairs, not column names -
+        # map back to the underlying variable names before checking co-occurrence
+        # against transactions_per_time_granule's own (variable-name-keyed) columns.
+        variable_names = {self.variables[item[0]] for item in itemset}
+        co_occurrence = sum(
+            1
+            for transactions_df in self.ti_table.transactions_per_time_granule
+            if variable_names.issubset(transactions_df.columns)
+        )
+        return {
+            "frequency": float(frequency),
+            "support": float(support),
+            "co_occurrence": co_occurrence,
+        }
+
     def generate_superset_itemsets(
         self, frequent_itemsets: list, max_len_of_itemsets: int
     ) -> set:
@@ -414,10 +463,13 @@ class FuzzyTemporalAssocationRuleMining(
                     if set(possible_subset_vertex["item"]).issubset(candidate):
                         edges_to_add.add((possible_subset_vertex, target_vertex))
 
+                # every edge in this call points to the SAME target_vertex
+                # (candidate), so its measures broadcast safely as scalars.
+                measures = self._measure_itemset(candidate)
                 # add the edges between the frequent items and the new
                 # candidates
                 self.knowledge_base.graph.add_edges(
-                    edges_to_add, attributes={"lattice": True}
+                    edges_to_add, attributes={"lattice": True, **measures}
                 )
         return candidate_indices
 
@@ -489,8 +541,33 @@ class FuzzyTemporalAssocationRuleMining(
                     frequent_set_vertex["item"]
                 ):
                     edges_to_add.add((frequent_item_vertex, frequent_set_vertex))
+        # this call is BATCHED across every 2-itemset candidate at once (unlike
+        # generate_superset_itemsets' per-candidate call) - edges_to_add spans
+        # MULTIPLE different frequent_set_vertex targets, so a single scalar
+        # measures dict would be wrong here; build one per target itemset instead
+        # (reusing the already-computed supports tensor by index) and look each
+        # edge's own target's measures up individually.
+        measures_by_itemset = {
+            frozenset(candidate): self._measure_itemset(candidate, support=supports[idx])
+            for idx, candidate in enumerate(new_candidates)
+        }
+        # converted to a list (from a set) so the per-edge attribute lists below
+        # can be built in the same, stable order add_edges will assign to them.
+        edges_to_add = list(edges_to_add)
+        edge_measures = [
+            measures_by_itemset[frozenset(frequent_set_vertex["item"])]
+            for _, frequent_set_vertex in edges_to_add
+        ]
         # add the edges between the frequent items and the new candidates
-        self.knowledge_base.graph.add_edges(edges_to_add, attributes={"lattice": True})
+        self.knowledge_base.graph.add_edges(
+            edges_to_add,
+            attributes={
+                "lattice": True,
+                "frequency": [m["frequency"] for m in edge_measures],
+                "support": [m["support"] for m in edge_measures],
+                "co_occurrence": [m["co_occurrence"] for m in edge_measures],
+            },
+        )
         return new_candidates
 
     def find_candidates(self, candidates: list = None) -> list:
@@ -664,15 +741,24 @@ class FuzzyTemporalAssocationRuleMining(
         antecedent_support = self.fuzzy_temporal_supports(predecessors, starting_period)
         return overall_support / antecedent_support
 
-    def visualize_lattice(self, layout: str = "grid") -> None:
+    def visualize_lattice(
+        self,
+        layout: str = "grid",
+        weight_by: Union[str, EdgeWeightEnum] = EdgeWeightEnum.FREQUENCY,
+    ) -> None:
         """
         Visualize and display the constructed lattice.
+
         Args:
             layout: The chosen layout style; default is 'grid'.
+            weight_by: Which edge measure (see EdgeWeightEnum) to visualize as edge
+                thickness - accepts either an EdgeWeightEnum member or a matching
+                plain string (e.g. "co_occurrence"); default is frequency.
 
         Returns:
             None
         """
+        weight_by = EdgeWeightEnum(weight_by)
         _, axs = plt.subplots()
 
         subgraph = self.knowledge_base.graph.subgraph(
@@ -686,9 +772,10 @@ class FuzzyTemporalAssocationRuleMining(
             edge_width=0.5,
             target=axs,
             opacity=0.7,
-            vertex_size=(np.array(self.knowledge_base.graph.authority_score()) / 3)
-            + 0.1,
-            edge_size=self.knowledge_base.graph.es["weight"],
+            # both computed against subgraph itself, not the full graph - vertex/edge
+            # counts and ordering only match subgraph's own, not the full graph's.
+            vertex_size=(np.array(subgraph.authority_score()) / 3) + 0.1,
+            edge_size=subgraph.es[weight_by.value],
         )
         plt.axis("off")
         plt.show()

@@ -5,6 +5,7 @@ and its necessary helper functions.
 
 import datetime
 import unittest
+import unittest.mock
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -14,6 +15,7 @@ from fuzzy.logic.knowledge_base import KnowledgeBase
 from fuzzy.logic.variables import LinguisticVariables
 from fuzzy.sets import FuzzySetGroup, Gaussian, Membership, Triangular
 from fuzzy_ml.association.temporal import AssociationRule
+from fuzzy_ml.association.temporal import EdgeWeightEnum
 from fuzzy_ml.association.temporal import FuzzyTemporalAssocationRuleMining as FTARM
 from fuzzy_ml.association.temporal import TemporalInformationTable as TI
 from fuzzy_ml.utils import set_rng
@@ -866,3 +868,112 @@ class TestFTARM(unittest.TestCase):
             frozenset({(1, 0), (3, 1), (0, 0)}),
             frozenset({(1, 0), (4, 0), (3, 1)}),
         }
+
+
+class TestEdgeMeasuresAndVisualization(unittest.TestCase):
+    """
+    Test that lattice edges carry frequency/support/co_occurrence measures (added
+    to fix visualize_lattice()'s previous KeyError on a "weight" attribute nothing
+    ever set), for edges from BOTH generate_candidates_of_length_two (the 2-itemset
+    base case) and generate_superset_itemsets (3+-itemsets), and that
+    visualize_lattice() itself runs without error for every EdgeWeightEnum option.
+
+    make_example()'s dataset has two time granules (2011-08-05, 2011-08-06):
+    variables A/B (indices 0/1) have nonzero values in BOTH granules, while D/E
+    (indices 3/4) are entirely zero in the first granule - so any itemset
+    involving only {A, B} should co-occur in both granules (co_occurrence == 2),
+    while any itemset involving D or E should co-occur in only the second
+    (co_occurrence == 1).
+    """
+
+    def setUp(self) -> None:
+        self.min_support = 0.3
+        dataframe, knowledge_base = make_example()
+        self.ftarm = FTARM(
+            dataframe,
+            knowledge_base,
+            min_support=self.min_support,
+            device=AVAILABLE_DEVICE,
+        )
+        # required to build the lattice structure the edges below live on
+        self.ftarm.find_candidates()
+        self.graph = knowledge_base.graph
+
+    def _edges_into_itemset(self, itemset) -> list:
+        # item is stored as whatever tuple() ordering tuple()/frozenset() happened
+        # to produce at vertex-creation time - not guaranteed to match a freshly
+        # constructed tuple/set's own iteration order, so compare by SET content
+        # rather than exact tuple equality (igraph's item_eq is exact-match only).
+        # Not every vertex's "item" is an itemset - KnowledgeBase.create()'s own
+        # pre-existing vertices hold non-iterable objects (e.g. a FuzzySetGroup),
+        # so guard the set() conversion per vertex rather than assuming it applies.
+        #
+        # More than one vertex can legitimately match: generate_superset_itemsets
+        # adds a NEW vertex for every (itemset_1, itemset_2) pair whose union
+        # produces this candidate, without deduplicating against an
+        # already-added vertex with the identical item content - a real,
+        # pre-existing quirk (confirmed directly, out of scope here) that can
+        # produce several vertices for one logical itemset. All of them should
+        # carry identical measures regardless, since those only depend on the
+        # itemset's content, not which pair happened to construct it.
+        target_vertices = []
+        for vertex in self.graph.vs:
+            try:
+                if set(vertex["item"]) == set(itemset):
+                    target_vertices.append(vertex)
+            except TypeError:
+                continue
+        self.assertGreaterEqual(len(target_vertices), 1, f"expected at least one vertex for {itemset}")
+        edges = []
+        for vertex in target_vertices:
+            edges.extend(self.graph.es.select(_target=vertex.index))
+        return edges
+
+    def test_two_itemset_edges_carry_all_three_measures(self) -> None:
+        """Edges from generate_candidates_of_length_two (the 2-itemset base case)."""
+        for edge in self._edges_into_itemset({(0, 0), (1, 0)}):  # A, B
+            self.assertTrue(edge["lattice"])
+            self.assertIsInstance(edge["frequency"], float)
+            self.assertIsInstance(edge["support"], float)
+            self.assertGreater(edge["frequency"], 0.0)
+            self.assertGreater(edge["support"], 0.0)
+
+    def test_co_occurrence_matches_which_time_granules_the_variables_share(self) -> None:
+        # A and B: both nonzero in both time granules
+        for edge in self._edges_into_itemset({(0, 0), (1, 0)}):
+            self.assertEqual(edge["co_occurrence"], 2)
+
+        # A and D: D is entirely zero in the first time granule
+        for edge in self._edges_into_itemset({(0, 0), (3, 1)}):
+            self.assertEqual(edge["co_occurrence"], 1)
+
+    def test_support_matches_fuzzy_temporal_supports(self) -> None:
+        itemset = ((0, 0), (1, 0))
+        expected_support = self.ftarm.fuzzy_temporal_supports([itemset])[0].item()
+        for edge in self._edges_into_itemset(itemset):
+            self.assertAlmostEqual(edge["support"], expected_support, places=5)
+
+    def test_frequency_matches_scalar_cardinality(self) -> None:
+        itemset = ((0, 0), (1, 0))
+        expected_frequency = self.ftarm.scalar_cardinality([itemset])[0].item()
+        for edge in self._edges_into_itemset(itemset):
+            self.assertAlmostEqual(edge["frequency"], expected_frequency, places=5)
+
+    def test_superset_itemset_edges_also_carry_all_three_measures(self) -> None:
+        """Edges from generate_superset_itemsets (3+-itemsets) - the per-candidate,
+        scalar-broadcast call site, as opposed to the batched 2-itemset site above."""
+        for edge in self._edges_into_itemset(frozenset({(1, 0), (3, 1), (0, 0)})):
+            self.assertTrue(edge["lattice"])
+            self.assertIsInstance(edge["frequency"], float)
+            self.assertIsInstance(edge["support"], float)
+            self.assertIsInstance(edge["co_occurrence"], int)
+
+    def test_visualize_lattice_does_not_raise_for_any_weight_option(self) -> None:
+        with unittest.mock.patch("matplotlib.pyplot.show"):
+            self.ftarm.visualize_lattice()  # default: EdgeWeightEnum.FREQUENCY
+            self.ftarm.visualize_lattice(weight_by="support")  # plain string
+            self.ftarm.visualize_lattice(weight_by=EdgeWeightEnum.CO_OCCURRENCE)  # enum
+
+    def test_visualize_lattice_rejects_an_unknown_weight_option(self) -> None:
+        with self.assertRaises(ValueError):
+            self.ftarm.visualize_lattice(weight_by="not_a_real_measure")
