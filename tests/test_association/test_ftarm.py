@@ -3,6 +3,7 @@ Test the Fuzzy Temporal Association Rule Mining algorithm
 and its necessary helper functions.
 """
 
+import collections
 import datetime
 import unittest
 import unittest.mock
@@ -908,14 +909,12 @@ class TestEdgeMeasuresAndVisualization(unittest.TestCase):
         # pre-existing vertices hold non-iterable objects (e.g. a FuzzySetGroup),
         # so guard the set() conversion per vertex rather than assuming it applies.
         #
-        # More than one vertex can legitimately match: generate_superset_itemsets
-        # adds a NEW vertex for every (itemset_1, itemset_2) pair whose union
-        # produces this candidate, without deduplicating against an
-        # already-added vertex with the identical item content - a real,
-        # pre-existing quirk (confirmed directly, out of scope here) that can
-        # produce several vertices for one logical itemset. All of them should
-        # carry identical measures regardless, since those only depend on the
-        # itemset's content, not which pair happened to construct it.
+        # Exactly one vertex is expected per logical itemset -
+        # generate_superset_itemsets used to add a fresh, duplicate vertex for
+        # every (itemset_1, itemset_2) pair whose union produced the same
+        # candidate (see TestNoDuplicateSupersetVertices below for the direct
+        # regression test) - asserting exactly one here, not "at least one",
+        # so a regression of that bug would also fail this helper's callers.
         target_vertices = []
         for vertex in self.graph.vs:
             try:
@@ -923,11 +922,8 @@ class TestEdgeMeasuresAndVisualization(unittest.TestCase):
                     target_vertices.append(vertex)
             except TypeError:
                 continue
-        self.assertGreaterEqual(len(target_vertices), 1, f"expected at least one vertex for {itemset}")
-        edges = []
-        for vertex in target_vertices:
-            edges.extend(self.graph.es.select(_target=vertex.index))
-        return edges
+        self.assertEqual(len(target_vertices), 1, f"expected exactly one vertex for {itemset}")
+        return self.graph.es.select(_target=target_vertices[0].index)
 
     def test_two_itemset_edges_carry_all_three_measures(self) -> None:
         """Edges from generate_candidates_of_length_two (the 2-itemset base case)."""
@@ -977,3 +973,33 @@ class TestEdgeMeasuresAndVisualization(unittest.TestCase):
     def test_visualize_lattice_rejects_an_unknown_weight_option(self) -> None:
         with self.assertRaises(ValueError):
             self.ftarm.visualize_lattice(weight_by="not_a_real_measure")
+
+
+class TestNoDuplicateSupersetVertices(unittest.TestCase):
+    """
+    Regression test: generate_superset_itemsets used to add a fresh vertex for
+    every (itemset_1, itemset_2) pair whose union produced a given candidate,
+    without checking whether a vertex for that exact itemset already existed -
+    multiple different subset pairs can union to the same superset, so the same
+    logical itemset could end up with several duplicate vertices (and duplicate
+    parallel edges, re-added every time). Confirmed directly before fixing:
+    make_example()'s own {(1, 0), (3, 1), (0, 0)} 3-itemset got 3 separate
+    vertices. Fixed by checking `candidate in candidate_indices` (a set already
+    being populated for the method's own return value, just never consulted
+    before creating a vertex) before calling add_vertex().
+    """
+
+    def test_each_logical_itemset_gets_exactly_one_vertex(self) -> None:
+        dataframe, knowledge_base = make_example()
+        ftarm = FTARM(dataframe, knowledge_base, min_support=0.3, device=AVAILABLE_DEVICE)
+        ftarm.find_candidates()
+
+        seen_itemsets = collections.Counter()
+        for vertex in knowledge_base.graph.vs:
+            try:
+                seen_itemsets[frozenset(vertex["item"])] += 1
+            except TypeError:
+                continue  # not an itemset-bearing vertex (e.g. a FuzzySetGroup)
+
+        duplicated = {itemset: count for itemset, count in seen_itemsets.items() if count > 1}
+        self.assertEqual(duplicated, {}, f"duplicate vertices found for: {duplicated}")

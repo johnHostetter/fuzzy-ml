@@ -451,6 +451,17 @@ class FuzzyTemporalAssocationRuleMining(
             if len(candidate) == max_len_of_itemsets + 1 and len(
                 required_subsets.intersection(available_subsets)
             ) == len(required_subsets):
+                if candidate in candidate_indices:
+                    # a DIFFERENT (itemset_1, itemset_2) pair already produced this
+                    # same candidate earlier in this loop (multiple subset pairs can
+                    # union to the same superset) - a vertex (and all its qualifying
+                    # edges, which depend only on `candidate`/possible_subsets_vertices,
+                    # never on which pair produced it, so nothing new would be found
+                    # anyway) already exists for it. Confirmed directly: without this
+                    # check, the same logical itemset got a fresh, duplicate vertex
+                    # (and duplicate parallel edges) for every pair that produced it -
+                    # 3 vertices for one 3-itemset in a real toy example.
+                    continue
                 candidate_indices.add(candidate)
                 target_vertex = self.knowledge_base.graph.add_vertex(
                     item=tuple(candidate),
