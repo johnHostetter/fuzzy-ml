@@ -53,20 +53,26 @@ class TestFindHeuristicCutoff(unittest.TestCase):
         # after filtering: [0.1, 0.2, 0.9] - too few points for a knee
         self.assertEqual(find_heuristic_cutoff([-1, 0, 0.1, 0.2, 0.9]), 0.0)
 
-    def test_no_positive_values_raises(self) -> None:
+    def test_no_positive_values_returns_zero_instead_of_raising(self) -> None:
         """
-        Documents current (pre-existing, not introduced by this migration)
-        behavior: if every value is filtered out (all <= 0, or the input is
-        empty), the underlying KneeLocator call raises ValueError on the
-        resulting empty array rather than the function's own `if knee_value
-        is None: knee_value = 0.0` fallback ever being reached - that
-        fallback only handles "a knee search ran and found nothing", not
-        "no knee search could run at all".
+        Fixed: if every value is filtered out (all <= 0, or the input is
+        empty), this used to let the underlying KneeLocator call raise
+        ValueError on the resulting empty array, instead of ever reaching the
+        function's own `if knee_value is None: knee_value = 0.0` fallback -
+        that fallback only handled "a knee search ran and found nothing", not
+        "no knee search could run at all". Found while wiring
+        WangMendelMethod's own (separately fixed) consequence resolution into
+        a real self-organizing pipeline - the more varied, now-correct rule
+        set it produces triggered this exact "zero positive heuristics" case,
+        which was never exercised via a real KnowledgeBase before. 0.0 is the
+        semantically correct return here, not just a crash-avoidance
+        placeholder: frequent_discernible() (this module's own caller)
+        already special-cases cutoff_value == 0.0 to mean "delete every
+        vertex whose heuristic isn't positive," which is exactly the right
+        outcome when there are zero positive candidates in the first place.
         """
-        with self.assertRaises(ValueError):
-            find_heuristic_cutoff([0.0, 0.0, 0.0])
-        with self.assertRaises(ValueError):
-            find_heuristic_cutoff([])
+        self.assertEqual(find_heuristic_cutoff([0.0, 0.0, 0.0]), 0.0)
+        self.assertEqual(find_heuristic_cutoff([]), 0.0)
 
 
 if __name__ == "__main__":

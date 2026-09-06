@@ -376,6 +376,17 @@ def find_heuristic_cutoff(vertices_heuristics):
         The heuristic cutoff
     """
     valid_heuristics = sorted([val for val in vertices_heuristics if val > 0])
+    if not valid_heuristics:
+        # No vertex has a positive heuristic - KneeLocator's own interpolation
+        # (scipy.interpolate.interp1d under the hood) raises ValueError on an empty
+        # array rather than returning no knee, so this must be caught before calling
+        # it, not after. The existing `if knee_value is None: knee_value = 0.0`
+        # fallback below already anticipates "no meaningful knee found" and is exactly
+        # the right value here too - the caller (frequent_discernible()) already
+        # branches on cutoff_value == 0.0 to mean "delete every non-positive vertex",
+        # which is precisely correct when there are zero positive candidates to find a
+        # knee among.
+        return 0.0
     observation = range(len(valid_heuristics))
     # knee_value = KneeLocator(
     #     observation,
