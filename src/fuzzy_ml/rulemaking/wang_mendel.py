@@ -42,30 +42,49 @@ class WangMendelMethod(Node):
         Returns:
             A list of Rule objects, kept in the order for which they are created.
         """
-        rules, consequence_resolution = [], {}
-        for observation in exemplars.data:
+        rules = []
+        has_targets = (
+            exemplars.labels is not None and linguistic_variables.targets is not None
+        )
+        # zip pairs each observation with ITS OWN label - previously this indexed
+        # exemplars.labels independently of exemplars.data (see the loop body's own
+        # history for what that looked like), so every rule's consequence was resolved
+        # against every training label ever seen, not just the one belonging to this
+        # observation.
+        labels = exemplars.labels if has_targets else [None] * len(exemplars.data)
+        for observation, target_observation in zip(exemplars.data, labels):
             # this block of code is for antecedents
             premise, _ = find_maximum_fuzzy_terms(
                 observation, linguistic_variables.inputs
             )
             consequence = set()
-            if (
-                exemplars.labels is not None
-                and linguistic_variables.targets is not None
-            ):
-                for output_observation in exemplars.labels:
-                    possible_consequence, membership_degrees = find_maximum_fuzzy_terms(
-                        output_observation,
-                        linguistic_variables.targets,
-                        offset=len(observation),
+            if has_targets:
+                # consequence_resolution must be fresh PER OBSERVATION, not accumulated
+                # across the whole dataset - previously it was created once outside this
+                # loop and never reset, so by the time wang_mendel_method_helper() ran
+                # for a later observation, argmax over its accumulated scalar
+                # cardinalities was dominated by whichever target term matched the most
+                # PRIOR observations (in practice, the majority class), independent of
+                # this observation's own true label - confirmed empirically: every rule
+                # converged to the same consequence regardless of its row's actual
+                # class. Resolving membership degrees within a single observation is
+                # still meaningful (a target Gaussian's Membership can be nonzero in
+                # more than one term at once), so wang_mendel_method_helper()'s own
+                # per-observation argmax-over-degrees logic is still correct and reused
+                # unchanged - only the SCOPE of consequence_resolution needed fixing.
+                consequence_resolution = {}
+                possible_consequence, membership_degrees = find_maximum_fuzzy_terms(
+                    target_observation,
+                    linguistic_variables.targets,
+                    offset=len(observation),
+                )
+                for variable_term_pair, membership_degree in zip(
+                    possible_consequence, membership_degrees
+                ):
+                    consequence_resolution[variable_term_pair] = (
+                        consequence_resolution.get(variable_term_pair, 0)
+                        + membership_degree
                     )
-                    for variable_term_pair, membership_degree in zip(
-                        possible_consequence, membership_degrees
-                    ):
-                        consequence_resolution[variable_term_pair] = (
-                            consequence_resolution.get(variable_term_pair, 0)
-                            + membership_degree
-                        )
 
                 self.wang_mendel_method_helper(
                     consequence,
